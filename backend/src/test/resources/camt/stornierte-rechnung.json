@@ -1,0 +1,23 @@
+{
+  "beschreibung": "Referenz einer stornierten Rechnung: Klärungsliste",
+  "konto": "QR",
+  "rechnungen": [
+    { "kunde": "Keller Haustechnik AG", "betrag": "310.00", "waehrung": "CHF", "storniert": true }
+  ],
+  "importe": [
+    { "datei": "stornierte-rechnung.xml", "status": 201, "neu": 1, "uebersprungen": 0, "ignoriert": 0 }
+  ],
+  "zahlungen": [
+    {
+      "bankReferenz": "STORNO-1",
+      "status": "KLAERUNG",
+      "klaerungsgrund": "RECHNUNG_STORNIERT",
+      "rest": "310.00",
+      "zuordnungen": [],
+      "vorschlaege": []
+    }
+  ],
+  "rechnungenNachher": [
+    { "nummer": "RE-2026-0001", "status": "STORNIERT", "offen": "0.00" }
+  ]
+}

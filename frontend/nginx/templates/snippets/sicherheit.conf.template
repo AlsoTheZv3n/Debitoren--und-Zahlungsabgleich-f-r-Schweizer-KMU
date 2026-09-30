@@ -1,0 +1,8 @@
+# Wird beim Start per envsubst zu /etc/nginx/conf.d/snippets/sicherheit.conf.
+# Sicherheits-Header für jede Antwort. nginx vererbt add_header nicht in Blöcke mit eigenem add_header,
+# deshalb bindet jeder location-Block diese Datei ein. HSTS setzt der TLS-Endpunkt (Ingress).
+add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' ${OIDC_ORIGIN}; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()" always;
+add_header Cross-Origin-Opener-Policy "same-origin" always;

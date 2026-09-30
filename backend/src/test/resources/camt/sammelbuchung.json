@@ -1,0 +1,43 @@
+{
+  "beschreibung": "Sammelbuchung mit mehreren Transaktionen: jede einzeln verarbeitet; Belastung und Vormerkung ignoriert",
+  "konto": "QR",
+  "rechnungen": [
+    { "kunde": "Keller Haustechnik AG", "betrag": "150.00", "waehrung": "CHF" },
+    { "kunde": "Brunner Marco", "betrag": "250.00", "waehrung": "CHF" },
+    { "kunde": "Gasser Treuhand GmbH", "betrag": "600.00", "waehrung": "CHF" }
+  ],
+  "importe": [
+    { "datei": "sammelbuchung.xml", "status": 201, "neu": 3, "uebersprungen": 0, "ignoriert": 2 }
+  ],
+  "zahlungen": [
+    {
+      "bankReferenz": "SAMMEL-1",
+      "status": "ZUGEORDNET",
+      "rest": "0.00",
+      "zuordnungen": [
+        { "rechnung": "RE-2026-0001", "betrag": "150.00", "art": "AUTO", "regel": "REFERENZ_EXAKT" }
+      ]
+    },
+    {
+      "bankReferenz": "SAMMEL-2",
+      "status": "ZUGEORDNET",
+      "rest": "0.00",
+      "zuordnungen": [
+        { "rechnung": "RE-2026-0002", "betrag": "250.00", "art": "AUTO", "regel": "REFERENZ_EXAKT" }
+      ]
+    },
+    {
+      "bankReferenz": "SAMMEL-3",
+      "status": "ZUGEORDNET",
+      "rest": "0.00",
+      "zuordnungen": [
+        { "rechnung": "RE-2026-0003", "betrag": "600.00", "art": "AUTO", "regel": "REFERENZ_EXAKT" }
+      ]
+    }
+  ],
+  "rechnungenNachher": [
+    { "nummer": "RE-2026-0001", "status": "BEZAHLT", "offen": "0.00" },
+    { "nummer": "RE-2026-0002", "status": "BEZAHLT", "offen": "0.00" },
+    { "nummer": "RE-2026-0003", "status": "BEZAHLT", "offen": "0.00" }
+  ]
+}

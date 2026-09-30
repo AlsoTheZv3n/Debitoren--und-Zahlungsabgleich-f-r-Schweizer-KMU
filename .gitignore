@@ -1,0 +1,28 @@
+# Build-Ausgaben
+backend/target/
+backend/.jqwik-database
+frontend/dist/
+frontend/coverage/
+e2e/playwright-report/
+e2e/test-results/
+e2e/blob-report/
+
+# Abhängigkeiten
+node_modules/
+.pnpm-store/
+
+# Lokale Dateiablage (Profil dev)
+backend/data/
+
+# IDEs und Betriebssystem
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+
+# Lokale Umgebungswerte
+.env
+.env.*
+!.env.example

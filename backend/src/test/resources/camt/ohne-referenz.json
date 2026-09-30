@@ -1,0 +1,27 @@
+{
+  "beschreibung": "Ohne Referenz, Betrag und Name passen: Vorschlag, keine automatische Zuordnung",
+  "konto": "QR",
+  "rechnungen": [
+    { "kunde": "Gasser Treuhand GmbH", "betrag": "95.50", "waehrung": "CHF" }
+  ],
+  "importe": [
+    { "datei": "ohne-referenz.xml", "status": 201, "neu": 1, "uebersprungen": 0, "ignoriert": 0 }
+  ],
+  "zahlungen": [
+    {
+      "bankReferenz": "OHNEREF-1",
+      "status": "KLAERUNG",
+      "klaerungsgrund": "OHNE_REFERENZ",
+      "rest": "95.50",
+      "auftraggeber": "GASSER TREUHAND",
+      "mitteilung": "Rechnung Beratung August",
+      "zuordnungen": [],
+      "vorschlaege": [
+        { "rechnung": "RE-2026-0001", "betrag": "95.50", "regel": "BETRAG_UND_KUNDE", "automatisch": false }
+      ]
+    }
+  ],
+  "rechnungenNachher": [
+    { "nummer": "RE-2026-0001", "status": "OFFEN", "offen": "95.50" }
+  ]
+}

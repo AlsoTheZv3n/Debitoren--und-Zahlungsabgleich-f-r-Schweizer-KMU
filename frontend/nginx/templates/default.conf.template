@@ -1,0 +1,32 @@
+# Vorlage für nginx; das Image ersetzt ${OIDC_...} beim Start durch Umgebungsvariablen.
+# nginx-Variablen wie $uri bleiben unberührt, weil sie nicht in der Umgebung stehen.
+server {
+    listen 8080;
+    server_name _;
+    root /usr/share/nginx/html;
+    server_tokens off;
+
+    # Laufzeitkonfiguration der SPA; überschreibt die Entwicklungsdatei public/config.json.
+    location = /config.json {
+        default_type application/json;
+        include /etc/nginx/conf.d/snippets/sicherheit.conf;
+        add_header Cache-Control "no-store" always;
+        return 200 '{"oidc":{"authority":"${OIDC_AUTHORITY}","clientId":"${OIDC_CLIENT_ID}"}}';
+    }
+
+    # Dateien mit Hash im Namen ändern sich nie.
+    location /assets/ {
+        include /etc/nginx/conf.d/snippets/sicherheit.conf;
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        try_files $uri =404;
+    }
+
+    location / {
+        include /etc/nginx/conf.d/snippets/sicherheit.conf;
+        add_header Cache-Control "no-cache" always;
+        try_files $uri /index.html;
+    }
+
+    # Im Compose-Stack leitet ein zusätzliches Snippet /api ans Backend; in Kubernetes erledigt das der Ingress.
+    include /etc/nginx/extra/*.conf;
+}

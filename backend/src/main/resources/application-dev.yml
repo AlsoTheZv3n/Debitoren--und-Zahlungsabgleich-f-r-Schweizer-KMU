@@ -1,0 +1,23 @@
+# Lokale Entwicklung gegen deploy/compose/docker-compose.yml (PostgreSQL, Keycloak, Mailpit).
+# Port 8082 statt 8080, weil 8080 auf Entwicklerrechnern oft schon belegt ist; im Container gilt 8080.
+server:
+  port: 8082
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:15432/debitoren
+    username: debitoren
+    password: debitoren
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+debitoren:
+  api-docs-oeffentlich: true
+
+logging:
+  level:
+    ch.kmu.debitoren: debug

@@ -1,0 +1,86 @@
+# Grundkonfiguration für alle Umgebungen. Umgebungsabhängige Werte kommen über Umgebungsvariablen;
+# Profile: dev (lokal, mit Seeder), test (automatische Tests), prod (Staging und Produktion).
+spring:
+  application:
+    name: debitoren
+  threads:
+    virtual:
+      enabled: true
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+          # Ein Import schreibt tausende Zahlungen; gebündelt geht das in wenigen Roundtrips.
+          batch_size: 50
+        order_inserts: true
+  servlet:
+    multipart:
+      # Eine camt.054-Datei mit 10'000 Buchungen hat gut 15 MB; nginx lässt 20 MB durch.
+      max-file-size: 20MB
+      max-request-size: 20MB
+  mvc:
+    problemdetails:
+      enabled: true
+  task:
+    execution:
+      simple:
+        # Ereignis-Empfänger laufen asynchron; mehr als vier gleichzeitige PDF-Erstellungen bringen nichts.
+        concurrency-limit: 4
+  modulith:
+    events:
+      # Zugestellte Ereignisse löschen; nicht zugestellte beim nächsten Start erneut zustellen.
+      completion-mode: delete
+      republish-outstanding-events-on-restart: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Aussteller, wie ihn der Browser sieht; die Schlüssel holt das Backend über jwk-set-uri,
+          # im Container-Netz also direkt bei keycloak:8080.
+          issuer-uri: ${OIDC_ISSUER_URI:http://localhost:8081/realms/debitoren}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8081/realms/debitoren/protocol/openid-connect/certs}
+          audiences: debitoren-api
+
+server:
+  forward-headers-strategy: framework
+
+logging:
+  level:
+    # Ohne Systemschriften (etwa im Container) meldet PDFBox für jede Standardschrift einen Ersatz. Das
+    # betrifft nur die Darstellung als Bild; die Rechnung nutzt die PDF-Standardschriften, die jeder
+    # Betrachter mitbringt, und der Zahlteil bettet Liberation Sans ein.
+    org.apache.pdfbox.pdmodel.font.PDType1Font: error
+
+management:
+  server:
+    # Eigener Port, den der Ingress nicht nach aussen gibt.
+    port: ${MANAGEMENT_PORT:8091}
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+  default-produces-media-type: application/json
+  writer-with-order-by-keys: true
+  writer-with-default-pretty-printer: true
+
+debitoren:
+  # Nur lokal und in Tests: OpenAPI-Beschreibung und Swagger UI ohne Anmeldung.
+  api-docs-oeffentlich: false
+  dokumente:
+    # Lokal ein Verzeichnis; produktiv S3 (Phase 5).
+    ablage: lokal
+    verzeichnis: ${DEBITOREN_DOKUMENTE_VERZEICHNIS:data/dokumente}

@@ -1,0 +1,143 @@
+{
+  "realm": "debitoren",
+  "displayName": "Debitoren",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "resetPasswordAllowed": false,
+  "rememberMe": false,
+  "bruteForceProtected": true,
+  "failureFactor": 5,
+  "permanentLockout": false,
+  "waitIncrementSeconds": 60,
+  "maxFailureWaitSeconds": 900,
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "internationalizationEnabled": true,
+  "supportedLocales": ["de"],
+  "defaultLocale": "de",
+  "roles": {
+    "realm": [
+      {
+        "name": "admin",
+        "description": "Mandant, Benutzer, Mahnstufen und MWST-Sätze konfigurieren, zusätzlich alles der Buchhaltung"
+      },
+      {
+        "name": "buchhaltung",
+        "description": "Kunden und Rechnungen pflegen, Dateien importieren, Zahlungen zuordnen, Mahnungen freigeben"
+      },
+      {
+        "name": "leser",
+        "description": "Alles ansehen, nichts ändern"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "debitoren-spa",
+      "name": "Debitoren",
+      "description": "React-SPA; Authorization Code mit PKCE, ohne Client-Secret",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "frontchannelLogout": true,
+      "fullScopeAllowed": true,
+      "redirectUris": ["http://localhost:5180/*", "http://localhost:8088/*"],
+      "webOrigins": ["+"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "+"
+      },
+      "protocolMappers": [
+        {
+          "name": "mandant_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "mandant_id",
+            "claim.name": "mandant_id",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "audience debitoren-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "debitoren-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Andrea",
+      "lastName": "Meier",
+      "email": "andrea.meier@debitoren.example",
+      "attributes": {
+        "mandant_id": ["019a0000-0000-7000-8000-000000000001", "019a0000-0000-7000-8000-000000000002"]
+      },
+      "credentials": [{ "type": "password", "value": "admin", "temporary": false }],
+      "realmRoles": ["admin"]
+    },
+    {
+      "username": "buchhaltung",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Beat",
+      "lastName": "Frei",
+      "email": "beat.frei@debitoren.example",
+      "attributes": {
+        "mandant_id": ["019a0000-0000-7000-8000-000000000001", "019a0000-0000-7000-8000-000000000002"]
+      },
+      "credentials": [{ "type": "password", "value": "buchhaltung", "temporary": false }],
+      "realmRoles": ["buchhaltung"]
+    },
+    {
+      "username": "leser",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Lea",
+      "lastName": "Steiner",
+      "email": "lea.steiner@debitoren.example",
+      "attributes": {
+        "mandant_id": ["019a0000-0000-7000-8000-000000000001"]
+      },
+      "credentials": [{ "type": "password", "value": "leser", "temporary": false }],
+      "realmRoles": ["leser"]
+    }
+  ],
+  "components": {
+    "org.keycloak.userprofile.UserProfileProvider": [
+      {
+        "providerId": "declarative-user-profile",
+        "subComponents": {},
+        "config": {
+          "kc.user.profile.config": [
+            "{\"attributes\":[{\"name\":\"username\",\"displayName\":\"${username}\",\"validations\":{\"length\":{\"min\":3,\"max\":255},\"username-prohibited-characters\":{},\"up-username-not-idn-homograph\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"email\",\"displayName\":\"${email}\",\"validations\":{\"email\":{},\"length\":{\"max\":255}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"firstName\",\"displayName\":\"${firstName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"lastName\",\"displayName\":\"${lastName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"mandant_id\",\"displayName\":\"Mandanten\",\"validations\":{},\"annotations\":{},\"permissions\":{\"view\":[\"admin\"],\"edit\":[\"admin\"]},\"multivalued\":true}],\"groups\":[{\"name\":\"user-metadata\",\"displayHeader\":\"User metadata\",\"displayDescription\":\"Attributes, which refer to user metadata\"}]}"
+          ]
+        }
+      }
+    ]
+  }
+}

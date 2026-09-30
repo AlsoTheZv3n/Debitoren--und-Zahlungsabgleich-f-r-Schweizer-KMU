@@ -1,0 +1,3 @@
+# Nur diese Pakete dürfen beim Installieren Skripte ausführen.
+onlyBuiltDependencies:
+  - esbuild

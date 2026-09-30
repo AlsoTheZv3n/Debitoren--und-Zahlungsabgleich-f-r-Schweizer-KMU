@@ -1,0 +1,2223 @@
+{
+  "openapi" : "3.1.0",
+  "info" : {
+    "description" : "Debitoren- und Zahlungsabgleich für Schweizer KMU. Anfragen tragen ein Bearer-Token von Keycloak; bei mehreren Mandanten wählt der Header X-Mandant-Id den Mandanten.",
+    "title" : "Debitoren API",
+    "version" : "v1"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "security" : [ {
+    "keycloak" : [ ]
+  } ],
+  "paths" : {
+    "/api/kunden" : {
+      "get" : {
+        "operationId" : "kundenSuchen",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "suche",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "seite",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "groesse",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 25,
+            "maximum" : 200,
+            "minimum" : 1
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SeiteKundeDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Kunden suchen, nach Name sortiert",
+        "tags" : [ "Kunden" ]
+      },
+      "post" : {
+        "operationId" : "kundeAnlegen",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/KundeEingabeDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/KundeDto"
+                }
+              }
+            },
+            "description" : "Created"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Kunden anlegen",
+        "tags" : [ "Kunden" ]
+      }
+    },
+    "/api/kunden/{id}" : {
+      "get" : {
+        "operationId" : "kundeLesen",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/KundeDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Kunden lesen",
+        "tags" : [ "Kunden" ]
+      },
+      "put" : {
+        "operationId" : "kundeAendern",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/KundeAenderungDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/KundeDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Kunden ändern",
+        "tags" : [ "Kunden" ]
+      }
+    },
+    "/api/mandanten" : {
+      "get" : {
+        "operationId" : "mandantenAuflisten",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/MandantDto"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Mandanten, für die der angemeldete Benutzer arbeiten darf",
+        "tags" : [ "Mandanten" ]
+      }
+    },
+    "/api/me" : {
+      "get" : {
+        "operationId" : "aktuellerBenutzer",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BenutzerDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Angemeldeter Benutzer mit wirksamen Rollen und erlaubten Mandanten",
+        "tags" : [ "Benutzer" ]
+      }
+    },
+    "/api/mwst-saetze" : {
+      "get" : {
+        "operationId" : "mwstSaetzeAuflisten",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "stichtag",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/MwstSatzDto"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "MWST-Sätze des Mandanten; mit Stichtag nur die an diesem Tag gültigen",
+        "tags" : [ "MWST" ]
+      }
+    },
+    "/api/rechnungen" : {
+      "get" : {
+        "operationId" : "rechnungenSuchen",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "ENTWURF", "OFFEN", "TEILBEZAHLT", "BEZAHLT", "STORNIERT" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "kundeId",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "query",
+          "name" : "offen",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "in" : "query",
+          "name" : "ueberfaellig",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "in" : "query",
+          "name" : "faelligBis",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "suche",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "seite",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "groesse",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 25,
+            "maximum" : 200,
+            "minimum" : 1
+          }
+        }, {
+          "in" : "query",
+          "name" : "sortierung",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "DATUM_ABSTEIGEND",
+            "enum" : [ "DATUM_ABSTEIGEND", "DATUM_AUFSTEIGEND", "FAELLIGKEIT_AUFSTEIGEND", "NUMMER_ABSTEIGEND", "TOTAL_ABSTEIGEND" ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SeiteRechnungZeileDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Rechnungen mit Filtern, paginiert",
+        "tags" : [ "Rechnungen" ]
+      },
+      "post" : {
+        "operationId" : "entwurfAnlegen",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/EntwurfDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RechnungDto"
+                }
+              }
+            },
+            "description" : "Created"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Rechnungsentwurf anlegen",
+        "tags" : [ "Rechnungen" ]
+      }
+    },
+    "/api/rechnungen/vorschau" : {
+      "post" : {
+        "operationId" : "rechnungVorschau",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VorschauAnfrageDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VorschauDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Summen und Zahlteil eines ungespeicherten Entwurfs",
+        "tags" : [ "Rechnungen" ]
+      }
+    },
+    "/api/rechnungen/{id}" : {
+      "delete" : {
+        "operationId" : "entwurfLoeschen",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "query",
+          "name" : "version",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Entwurf löschen",
+        "tags" : [ "Rechnungen" ]
+      },
+      "get" : {
+        "operationId" : "rechnungLesen",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RechnungDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Rechnung mit Positionen und Summen",
+        "tags" : [ "Rechnungen" ]
+      },
+      "put" : {
+        "operationId" : "entwurfAendern",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/EntwurfAenderungDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RechnungDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Entwurf bearbeiten",
+        "tags" : [ "Rechnungen" ]
+      }
+    },
+    "/api/rechnungen/{id}/freigabe" : {
+      "post" : {
+        "operationId" : "rechnungFreigeben",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VersionDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RechnungDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Entwurf freigeben: Nummer, Referenz und PDF",
+        "tags" : [ "Rechnungen" ]
+      }
+    },
+    "/api/rechnungen/{id}/pdf" : {
+      "get" : {
+        "operationId" : "rechnungPdf",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Rechnungs-PDF mit QR-Zahlteil",
+        "tags" : [ "Rechnungen" ]
+      }
+    },
+    "/api/rechnungen/{id}/storno" : {
+      "post" : {
+        "operationId" : "rechnungStornieren",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/StornoDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RechnungDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Offene Rechnung stornieren",
+        "tags" : [ "Rechnungen" ]
+      }
+    },
+    "/api/rechnungen/{id}/zahlteil.svg" : {
+      "get" : {
+        "operationId" : "rechnungZahlteil",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "image/svg+xml" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Vorschau des QR-Zahlteils",
+        "tags" : [ "Rechnungen" ]
+      }
+    },
+    "/api/zahlungen" : {
+      "get" : {
+        "operationId" : "zahlungenSuchen",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "OFFEN", "ZUGEORDNET", "KLAERUNG" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "zahlungsdateiId",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "query",
+          "name" : "suche",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "seite",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "groesse",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 25,
+            "maximum" : 200,
+            "minimum" : 1
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SeiteZahlungDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Zahlungen mit Rest, neueste Valuta zuerst; mit status=KLAERUNG die Klärungsliste",
+        "tags" : [ "Zahlungen" ]
+      }
+    },
+    "/api/zahlungen/{id}" : {
+      "get" : {
+        "operationId" : "zahlungLesen",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ZahlungDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Eine Zahlung mit Rest und Klärungsgrund",
+        "tags" : [ "Zahlungen" ]
+      }
+    },
+    "/api/zahlungen/{id}/vorschlaege" : {
+      "get" : {
+        "operationId" : "zahlungVorschlaege",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/VorschlagDto"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Zuordnungsvorschläge aller Strategien für den Rest",
+        "tags" : [ "Zahlungen" ]
+      }
+    },
+    "/api/zahlungen/{id}/zuordnungen" : {
+      "get" : {
+        "operationId" : "zahlungZuordnungen",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ZuordnungDto"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Zuordnungen dieser Zahlung",
+        "tags" : [ "Zahlungen" ]
+      },
+      "post" : {
+        "operationId" : "zahlungZuordnen",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ZuordnungAnfrageDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ZahlungDto"
+                }
+              }
+            },
+            "description" : "Created"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Zahlung von Hand einer Rechnung zuordnen; eine veraltete Version ergibt 409",
+        "tags" : [ "Zahlungen" ]
+      }
+    },
+    "/api/zahlungsdateien" : {
+      "get" : {
+        "operationId" : "zahlungsdateienAuflisten",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "seite",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "groesse",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 25,
+            "maximum" : 200,
+            "minimum" : 1
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SeiteZahlungsdateiDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Importprotokoll, neueste zuerst",
+        "tags" : [ "Zahlungsdateien" ]
+      },
+      "post" : {
+        "operationId" : "zahlungsdateiHochladen",
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "datei" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                },
+                "required" : [ "datei" ]
+              }
+            }
+          }
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ZahlungsdateiDto"
+                }
+              }
+            },
+            "description" : "Created"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "camt.054-Datei importieren; eine bekannte Datei wird mit 409 abgelehnt",
+        "tags" : [ "Zahlungsdateien" ]
+      }
+    },
+    "/api/zahlungsdateien/{id}/original" : {
+      "get" : {
+        "operationId" : "zahlungsdateiOriginal",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/xml" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "binary"
+                }
+              }
+            },
+            "description" : "Die Datei, wie sie hochgeladen wurde"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Die importierte Datei, unverändert",
+        "tags" : [ "Zahlungsdateien" ]
+      }
+    },
+    "/api/zuordnungen" : {
+      "get" : {
+        "operationId" : "zuordnungenDerRechnung",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "rechnungId",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ZuordnungDto"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Zahlungseingänge einer Rechnung",
+        "tags" : [ "Zuordnungen" ]
+      }
+    },
+    "/api/zuordnungen/{id}" : {
+      "delete" : {
+        "operationId" : "zuordnungAufheben",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Zuordnung aufheben; die Zahlung geht in die Klärung, die Rechnung wird wieder offen",
+        "tags" : [ "Zuordnungen" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "BenutzerDto" : {
+        "type" : "object",
+        "properties" : {
+          "anzeigename" : {
+            "type" : "string"
+          },
+          "benutzername" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "mandanten" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          "rollen" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "ADMIN", "BUCHHALTUNG", "LESER" ]
+            }
+          }
+        },
+        "required" : [ "anzeigename", "benutzername", "mandanten", "rollen" ]
+      },
+      "EmpfaengerDto" : {
+        "type" : "object",
+        "properties" : {
+          "hausnummer" : {
+            "type" : "string"
+          },
+          "land" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "ort" : {
+            "type" : "string"
+          },
+          "plz" : {
+            "type" : "string"
+          },
+          "strasse" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "land", "name", "ort", "plz" ]
+      },
+      "EntwurfAenderungDto" : {
+        "type" : "object",
+        "properties" : {
+          "entwurf" : {
+            "$ref" : "#/components/schemas/EntwurfDto"
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "entwurf", "version" ]
+      },
+      "EntwurfDto" : {
+        "type" : "object",
+        "properties" : {
+          "bemerkung" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "kundeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "positionen" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/EntwurfspositionDto"
+            },
+            "maxItems" : 100,
+            "minItems" : 0
+          },
+          "rechnungsdatum" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "waehrung" : {
+            "type" : "string",
+            "enum" : [ "CHF", "EUR" ]
+          },
+          "zahlungsfristTage" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 365,
+            "minimum" : 0
+          }
+        },
+        "required" : [ "kundeId", "positionen", "rechnungsdatum", "waehrung" ]
+      },
+      "EntwurfspositionDto" : {
+        "type" : "object",
+        "properties" : {
+          "beschreibung" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "einheit" : {
+            "type" : "string",
+            "maxLength" : 10,
+            "minLength" : 0
+          },
+          "einzelpreis" : {
+            "type" : "number",
+            "minimum" : 0
+          },
+          "menge" : {
+            "type" : "number",
+            "exclusiveMinimum" : 0
+          },
+          "mwstCode" : {
+            "type" : "string",
+            "enum" : [ "NORMAL", "REDUZIERT", "BEHERBERGUNG", "OHNE" ]
+          }
+        },
+        "required" : [ "beschreibung", "einzelpreis", "menge", "mwstCode" ]
+      },
+      "KundeAenderungDto" : {
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "type" : "string",
+            "format" : "email",
+            "maxLength" : 254,
+            "minLength" : 0
+          },
+          "hausnummer" : {
+            "type" : "string",
+            "maxLength" : 16,
+            "minLength" : 0
+          },
+          "land" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "[A-Z]{2}"
+          },
+          "name" : {
+            "type" : "string",
+            "maxLength" : 70,
+            "minLength" : 0
+          },
+          "ort" : {
+            "type" : "string",
+            "maxLength" : 35,
+            "minLength" : 0
+          },
+          "plz" : {
+            "type" : "string",
+            "maxLength" : 16,
+            "minLength" : 0
+          },
+          "strasse" : {
+            "type" : "string",
+            "maxLength" : 70,
+            "minLength" : 0
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "zahlungsfristTage" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 365,
+            "minimum" : 0
+          }
+        },
+        "required" : [ "land", "name", "ort", "plz", "version", "zahlungsfristTage" ]
+      },
+      "KundeDto" : {
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "type" : "string"
+          },
+          "hausnummer" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "kundennummer" : {
+            "type" : "string"
+          },
+          "land" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "ort" : {
+            "type" : "string"
+          },
+          "plz" : {
+            "type" : "string"
+          },
+          "strasse" : {
+            "type" : "string"
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "zahlungsfristTage" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "id", "kundennummer", "land", "name", "ort", "plz", "version", "zahlungsfristTage" ]
+      },
+      "KundeEingabeDto" : {
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "type" : "string",
+            "format" : "email",
+            "maxLength" : 254,
+            "minLength" : 0
+          },
+          "hausnummer" : {
+            "type" : "string",
+            "maxLength" : 16,
+            "minLength" : 0
+          },
+          "kundennummer" : {
+            "type" : "string",
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "land" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "[A-Z]{2}"
+          },
+          "name" : {
+            "type" : "string",
+            "maxLength" : 70,
+            "minLength" : 0
+          },
+          "ort" : {
+            "type" : "string",
+            "maxLength" : 35,
+            "minLength" : 0
+          },
+          "plz" : {
+            "type" : "string",
+            "maxLength" : 16,
+            "minLength" : 0
+          },
+          "strasse" : {
+            "type" : "string",
+            "maxLength" : 70,
+            "minLength" : 0
+          },
+          "zahlungsfristTage" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 365,
+            "minimum" : 0
+          }
+        },
+        "required" : [ "land", "name", "ort", "plz", "zahlungsfristTage" ]
+      },
+      "MandantDto" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "ort" : {
+            "type" : "string"
+          },
+          "referenzart" : {
+            "type" : "string",
+            "enum" : [ "QR", "SCOR" ]
+          }
+        },
+        "required" : [ "id", "name", "ort", "referenzart" ]
+      },
+      "MwstAnteilDto" : {
+        "type" : "object",
+        "properties" : {
+          "basis" : {
+            "type" : "number"
+          },
+          "betrag" : {
+            "type" : "number"
+          },
+          "code" : {
+            "type" : "string",
+            "enum" : [ "NORMAL", "REDUZIERT", "BEHERBERGUNG", "OHNE" ]
+          },
+          "prozent" : {
+            "type" : "number"
+          }
+        },
+        "required" : [ "basis", "betrag", "code", "prozent" ]
+      },
+      "MwstSatzDto" : {
+        "type" : "object",
+        "properties" : {
+          "bezeichnung" : {
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string",
+            "enum" : [ "NORMAL", "REDUZIERT", "BEHERBERGUNG", "OHNE" ]
+          },
+          "gueltigAb" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "gueltigBis" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "satz" : {
+            "type" : "number"
+          }
+        },
+        "required" : [ "bezeichnung", "code", "gueltigAb", "id", "satz" ]
+      },
+      "PositionDto" : {
+        "type" : "object",
+        "properties" : {
+          "beschreibung" : {
+            "type" : "string"
+          },
+          "betrag" : {
+            "type" : "number"
+          },
+          "einheit" : {
+            "type" : "string"
+          },
+          "einzelpreis" : {
+            "type" : "number"
+          },
+          "menge" : {
+            "type" : "number"
+          },
+          "mwstCode" : {
+            "type" : "string",
+            "enum" : [ "NORMAL", "REDUZIERT", "BEHERBERGUNG", "OHNE" ]
+          },
+          "mwstProzent" : {
+            "type" : "number"
+          },
+          "position" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "beschreibung", "betrag", "einzelpreis", "menge", "mwstCode", "mwstProzent", "position" ]
+      },
+      "Problem" : {
+        "type" : "object",
+        "description" : "Fehlerantwort nach RFC 9457",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "Fachlicher Code, etwa MANDANT_NICHT_ERLAUBT"
+          },
+          "detail" : {
+            "type" : "string"
+          },
+          "fehler" : {
+            "type" : "array",
+            "description" : "Feldfehler bei VALIDIERUNG_FEHLGESCHLAGEN",
+            "items" : {
+              "type" : "object",
+              "properties" : {
+                "feld" : {
+                  "type" : "string"
+                },
+                "meldung" : {
+                  "type" : "string"
+                }
+              },
+              "required" : [ "feld", "meldung" ]
+            }
+          },
+          "instance" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string",
+            "format" : "uri"
+          }
+        },
+        "required" : [ "code", "status", "title" ]
+      },
+      "RechnungDto" : {
+        "type" : "object",
+        "properties" : {
+          "bemerkung" : {
+            "type" : "string"
+          },
+          "empfaenger" : {
+            "$ref" : "#/components/schemas/EmpfaengerDto"
+          },
+          "faelligAm" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "freigegebenAm" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "kundeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "offen" : {
+            "type" : "number",
+            "description" : "Total abzüglich Zahlungseingänge; 0 bei Entwürfen, bezahlten und stornierten Rechnungen"
+          },
+          "positionen" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PositionDto"
+            }
+          },
+          "rechnungsdatum" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "rechnungsnummer" : {
+            "type" : "string"
+          },
+          "referenz" : {
+            "type" : "string"
+          },
+          "referenzart" : {
+            "type" : "string",
+            "enum" : [ "QR", "SCOR" ]
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ENTWURF", "OFFEN", "TEILBEZAHLT", "BEZAHLT", "STORNIERT" ]
+          },
+          "storniertAm" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "stornoGrund" : {
+            "type" : "string"
+          },
+          "summen" : {
+            "$ref" : "#/components/schemas/SummenDto"
+          },
+          "ueberfaellig" : {
+            "type" : "boolean"
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "waehrung" : {
+            "type" : "string",
+            "enum" : [ "CHF", "EUR" ]
+          },
+          "zahlungsfristTage" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "empfaenger", "faelligAm", "id", "kundeId", "offen", "positionen", "rechnungsdatum", "status", "summen", "ueberfaellig", "version", "waehrung", "zahlungsfristTage" ]
+      },
+      "RechnungZeileDto" : {
+        "type" : "object",
+        "properties" : {
+          "faelligAm" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "kundeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "kundeName" : {
+            "type" : "string"
+          },
+          "offen" : {
+            "type" : "number"
+          },
+          "rechnungsdatum" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "rechnungsnummer" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ENTWURF", "OFFEN", "TEILBEZAHLT", "BEZAHLT", "STORNIERT" ]
+          },
+          "total" : {
+            "type" : "number"
+          },
+          "ueberfaellig" : {
+            "type" : "boolean"
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "waehrung" : {
+            "type" : "string",
+            "enum" : [ "CHF", "EUR" ]
+          }
+        },
+        "required" : [ "faelligAm", "id", "kundeId", "kundeName", "offen", "rechnungsdatum", "status", "total", "ueberfaellig", "version", "waehrung" ]
+      },
+      "SeiteKundeDto" : {
+        "type" : "object",
+        "properties" : {
+          "anzahlElemente" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "anzahlSeiten" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "groesse" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "inhalt" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/KundeDto"
+            }
+          },
+          "seite" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "anzahlElemente", "anzahlSeiten", "groesse", "inhalt", "seite" ]
+      },
+      "SeiteRechnungZeileDto" : {
+        "type" : "object",
+        "properties" : {
+          "anzahlElemente" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "anzahlSeiten" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "groesse" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "inhalt" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RechnungZeileDto"
+            }
+          },
+          "seite" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "anzahlElemente", "anzahlSeiten", "groesse", "inhalt", "seite" ]
+      },
+      "SeiteZahlungDto" : {
+        "type" : "object",
+        "properties" : {
+          "anzahlElemente" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "anzahlSeiten" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "groesse" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "inhalt" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ZahlungDto"
+            }
+          },
+          "seite" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "anzahlElemente", "anzahlSeiten", "groesse", "inhalt", "seite" ]
+      },
+      "SeiteZahlungsdateiDto" : {
+        "type" : "object",
+        "properties" : {
+          "anzahlElemente" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "anzahlSeiten" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "groesse" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "inhalt" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ZahlungsdateiDto"
+            }
+          },
+          "seite" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "anzahlElemente", "anzahlSeiten", "groesse", "inhalt", "seite" ]
+      },
+      "StornoDto" : {
+        "type" : "object",
+        "properties" : {
+          "grund" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "grund", "version" ]
+      },
+      "SummenDto" : {
+        "type" : "object",
+        "properties" : {
+          "mwst" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MwstAnteilDto"
+            }
+          },
+          "mwstTotal" : {
+            "type" : "number"
+          },
+          "netto" : {
+            "type" : "number"
+          },
+          "rundung" : {
+            "type" : "number"
+          },
+          "total" : {
+            "type" : "number"
+          }
+        },
+        "required" : [ "mwst", "mwstTotal", "netto", "rundung", "total" ]
+      },
+      "VersionDto" : {
+        "type" : "object",
+        "properties" : {
+          "version" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "version" ]
+      },
+      "VorschauAnfrageDto" : {
+        "type" : "object",
+        "properties" : {
+          "kundeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "positionen" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/EntwurfspositionDto"
+            },
+            "maxItems" : 100,
+            "minItems" : 0
+          },
+          "rechnungsdatum" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "waehrung" : {
+            "type" : "string",
+            "enum" : [ "CHF", "EUR" ]
+          },
+          "zahlungsfristTage" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 365,
+            "minimum" : 0
+          }
+        },
+        "required" : [ "positionen", "rechnungsdatum", "waehrung" ]
+      },
+      "VorschauDto" : {
+        "type" : "object",
+        "properties" : {
+          "positionsbetraege" : {
+            "type" : "array",
+            "items" : {
+              "type" : "number"
+            }
+          },
+          "summen" : {
+            "$ref" : "#/components/schemas/SummenDto"
+          },
+          "zahlteilSvg" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "positionsbetraege", "summen", "zahlteilSvg" ]
+      },
+      "VorschlagDto" : {
+        "type" : "object",
+        "properties" : {
+          "automatisch" : {
+            "type" : "boolean"
+          },
+          "begruendung" : {
+            "type" : "string"
+          },
+          "betrag" : {
+            "type" : "number",
+            "description" : "Was zugeordnet würde"
+          },
+          "faelligAm" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "kundeName" : {
+            "type" : "string"
+          },
+          "offen" : {
+            "type" : "number"
+          },
+          "rechnungId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "rechnungsnummer" : {
+            "type" : "string"
+          },
+          "regel" : {
+            "type" : "string"
+          },
+          "waehrung" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "automatisch", "begruendung", "betrag", "faelligAm", "kundeName", "offen", "rechnungId", "rechnungsnummer", "regel", "waehrung" ]
+      },
+      "ZahlungDto" : {
+        "type" : "object",
+        "properties" : {
+          "auftraggeber" : {
+            "type" : "string"
+          },
+          "auftraggeberIban" : {
+            "type" : "string"
+          },
+          "bankReferenz" : {
+            "type" : "string"
+          },
+          "betrag" : {
+            "type" : "number"
+          },
+          "buchungsdatum" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "klaerungsgrund" : {
+            "type" : "string",
+            "enum" : [ "OHNE_REFERENZ", "REFERENZ_UNBEKANNT", "UEBERZAHLUNG", "WAEHRUNG_ABWEICHEND", "RECHNUNG_STORNIERT", "RECHNUNG_BEREITS_BEZAHLT", "RESTBETRAG", "ZUORDNUNG_AUFGEHOBEN" ]
+          },
+          "mitteilung" : {
+            "type" : "string"
+          },
+          "referenz" : {
+            "type" : "string",
+            "description" : "QR- oder SCOR-Referenz ohne Leerzeichen"
+          },
+          "rest" : {
+            "type" : "number",
+            "description" : "Noch keiner Rechnung zugeordnet"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "OFFEN", "ZUGEORDNET", "KLAERUNG" ]
+          },
+          "valuta" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "waehrung" : {
+            "type" : "string",
+            "description" : "ISO-Code, etwa CHF"
+          },
+          "zahlungsdateiId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "bankReferenz", "betrag", "id", "rest", "status", "valuta", "version", "waehrung", "zahlungsdateiId" ]
+      },
+      "ZahlungsdateiDto" : {
+        "type" : "object",
+        "properties" : {
+          "anzahlBuchungen" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Gutschriften in der Datei"
+          },
+          "anzahlIgnoriert" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Belastungen, Stornos und Vormerkungen"
+          },
+          "anzahlNeu" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Als Zahlung gespeichert"
+          },
+          "anzahlUebersprungen" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Schon aus einer früheren Datei bekannt"
+          },
+          "dateiname" : {
+            "type" : "string"
+          },
+          "erstelltVonBankAm" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "importiertAm" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "importiertVon" : {
+            "type" : "string"
+          },
+          "inKlaerung" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nachrichtId" : {
+            "type" : "string"
+          },
+          "unbearbeitet" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Noch nicht abgeglichen"
+          },
+          "zugeordnet" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "anzahlBuchungen", "anzahlIgnoriert", "anzahlNeu", "anzahlUebersprungen", "dateiname", "erstelltVonBankAm", "id", "importiertAm", "importiertVon", "inKlaerung", "nachrichtId", "unbearbeitet", "zugeordnet" ]
+      },
+      "ZuordnungAnfrageDto" : {
+        "type" : "object",
+        "properties" : {
+          "betrag" : {
+            "type" : "number",
+            "description" : "Ohne Angabe: Rest der Zahlung, höchstens der offene Betrag",
+            "minimum" : 0.01
+          },
+          "rechnungId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Version der Zahlung, wie sie angezeigt wurde"
+          }
+        },
+        "required" : [ "rechnungId", "version" ]
+      },
+      "ZuordnungDto" : {
+        "type" : "object",
+        "properties" : {
+          "art" : {
+            "type" : "string",
+            "enum" : [ "AUTO", "MANUELL" ]
+          },
+          "auftraggeber" : {
+            "type" : "string"
+          },
+          "betrag" : {
+            "type" : "number"
+          },
+          "erstelltAm" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "erstelltVon" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "kundeName" : {
+            "type" : "string"
+          },
+          "rechnungId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "rechnungsnummer" : {
+            "type" : "string"
+          },
+          "regel" : {
+            "type" : "string"
+          },
+          "valuta" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "waehrung" : {
+            "type" : "string"
+          },
+          "zahlungId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "art", "betrag", "erstelltAm", "erstelltVon", "id", "rechnungId", "regel", "waehrung", "zahlungId" ]
+      }
+    },
+    "securitySchemes" : {
+      "keycloak" : {
+        "bearerFormat" : "JWT",
+        "scheme" : "bearer",
+        "type" : "http"
+      }
+    }
+  }
+}

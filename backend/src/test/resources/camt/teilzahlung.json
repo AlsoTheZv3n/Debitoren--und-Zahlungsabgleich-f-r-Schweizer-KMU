@@ -1,0 +1,23 @@
+{
+  "beschreibung": "Teilzahlung: Rechnung teilbezahlt, Rest offen",
+  "konto": "QR",
+  "rechnungen": [
+    { "kunde": "Brunner Marco", "betrag": "500.00", "waehrung": "CHF" }
+  ],
+  "importe": [
+    { "datei": "teilzahlung.xml", "status": 201, "neu": 1, "uebersprungen": 0, "ignoriert": 0 }
+  ],
+  "zahlungen": [
+    {
+      "bankReferenz": "TEIL-1",
+      "status": "ZUGEORDNET",
+      "rest": "0.00",
+      "zuordnungen": [
+        { "rechnung": "RE-2026-0001", "betrag": "200.00", "art": "AUTO", "regel": "REFERENZ_EXAKT" }
+      ]
+    }
+  ],
+  "rechnungenNachher": [
+    { "nummer": "RE-2026-0001", "status": "TEILBEZAHLT", "offen": "300.00" }
+  ]
+}

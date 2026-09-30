@@ -1,0 +1,24 @@
+{
+  "beschreibung": "Dieselbe Datei nochmals: Import mit 409 abgelehnt",
+  "konto": "QR",
+  "rechnungen": [
+    { "kunde": "Keller Haustechnik AG", "betrag": "750.00", "waehrung": "CHF" }
+  ],
+  "importe": [
+    { "datei": "dieselbe-datei.xml", "status": 201, "neu": 1, "uebersprungen": 0, "ignoriert": 0 },
+    { "datei": "dieselbe-datei.xml", "status": 409, "code": "DATEI_BEREITS_IMPORTIERT" }
+  ],
+  "zahlungen": [
+    {
+      "bankReferenz": "DOPPELT-1",
+      "status": "ZUGEORDNET",
+      "rest": "0.00",
+      "zuordnungen": [
+        { "rechnung": "RE-2026-0001", "betrag": "750.00", "art": "AUTO", "regel": "REFERENZ_EXAKT" }
+      ]
+    }
+  ],
+  "rechnungenNachher": [
+    { "nummer": "RE-2026-0001", "status": "BEZAHLT", "offen": "0.00" }
+  ]
+}

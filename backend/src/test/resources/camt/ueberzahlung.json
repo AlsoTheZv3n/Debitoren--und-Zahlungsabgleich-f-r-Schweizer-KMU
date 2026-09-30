@@ -1,0 +1,25 @@
+{
+  "beschreibung": "Überzahlung: Rechnung bezahlt, Überschuss in der Klärung",
+  "konto": "QR",
+  "rechnungen": [
+    { "kunde": "Gasser Treuhand GmbH", "betrag": "250.00", "waehrung": "CHF" }
+  ],
+  "importe": [
+    { "datei": "ueberzahlung.xml", "status": 201, "neu": 1, "uebersprungen": 0, "ignoriert": 0 }
+  ],
+  "zahlungen": [
+    {
+      "bankReferenz": "UEBER-1",
+      "status": "KLAERUNG",
+      "klaerungsgrund": "UEBERZAHLUNG",
+      "rest": "50.00",
+      "zuordnungen": [
+        { "rechnung": "RE-2026-0001", "betrag": "250.00", "art": "AUTO", "regel": "REFERENZ_EXAKT" }
+      ],
+      "vorschlaege": []
+    }
+  ],
+  "rechnungenNachher": [
+    { "nummer": "RE-2026-0001", "status": "BEZAHLT", "offen": "0.00" }
+  ]
+}

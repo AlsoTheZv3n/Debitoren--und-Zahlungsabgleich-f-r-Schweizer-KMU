@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de-CH">
+<head>
+    <meta charset="UTF-8" />
+    <title th:text="${r.titel()}">Rechnung</title>
+    <style>
+        /* Unten 112 mm frei: dort setzt der Renderer auf der letzten Seite den QR-Zahlteil (105 mm). */
+        @page {
+            size: A4;
+            margin: 18mm 18mm 112mm 22mm;
+        }
+
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 9.5pt;
+            line-height: 1.35;
+            color: #111;
+        }
+
+        /* Absender links, Empfänger rechts im Sichtfenster eines C5-Umschlags (ab 118 mm vom Rand). */
+        table.kopf {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table.kopf td {
+            vertical-align: top;
+            padding: 0;
+        }
+
+        td.absender {
+            width: 96mm;
+            font-size: 8.5pt;
+            color: #444;
+        }
+
+        td.absender .name {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #111;
+        }
+
+        table.kopf td.empfaenger {
+            padding-top: 27mm;
+            font-size: 10pt;
+        }
+
+        h1 {
+            margin: 9mm 0 4mm 0;
+            font-size: 15pt;
+        }
+
+        table.angaben {
+            border-collapse: collapse;
+            margin-bottom: 4mm;
+        }
+
+        table.angaben td {
+            padding: 0.4mm 8mm 0.4mm 0;
+        }
+
+        table.angaben td.bezeichnung {
+            color: #555;
+        }
+
+        p.bemerkung {
+            margin: 0 0 4mm 0;
+        }
+
+        table.positionen {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table.positionen th {
+            text-align: left;
+            font-weight: bold;
+            border-bottom: 0.6pt solid #111;
+            padding: 1mm 1.5mm;
+        }
+
+        table.positionen td {
+            border-bottom: 0.3pt solid #bbb;
+            padding: 1mm 1.5mm;
+            vertical-align: top;
+        }
+
+        table.positionen .zahl {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        table.summen {
+            margin-left: auto;
+            margin-top: 3mm;
+            border-collapse: collapse;
+            width: 95mm;
+        }
+
+        table.summen td {
+            padding: 0.5mm 1.5mm;
+        }
+
+        table.summen td.betrag {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        table.summen tr.total td {
+            font-weight: bold;
+            font-size: 10.5pt;
+            border-top: 0.6pt solid #111;
+            padding-top: 1.5mm;
+        }
+
+        p.hinweis {
+            margin-top: 5mm;
+        }
+    </style>
+</head>
+<body>
+    <table class="kopf">
+        <tr>
+            <td class="absender">
+                <div class="name" th:text="${r.absenderName()}">Mandant</div>
+                <div th:each="zeile : ${r.absenderZeilen()}" th:text="${zeile}">Strasse</div>
+            </td>
+            <td class="empfaenger">
+                <div th:each="zeile : ${r.empfaengerZeilen()}" th:text="${zeile}">Empfänger</div>
+            </td>
+        </tr>
+    </table>
+
+    <h1 th:text="${r.titel()}">Rechnung</h1>
+
+    <table class="angaben">
+        <tr th:each="angabe : ${r.angaben()}">
+            <td class="bezeichnung" th:text="${angabe.bezeichnung()}">Bezeichnung</td>
+            <td th:text="${angabe.wert()}">Wert</td>
+        </tr>
+    </table>
+
+    <p class="bemerkung" th:if="${r.bemerkung() != null}" th:text="${r.bemerkung()}">Bemerkung</p>
+
+    <table class="positionen">
+        <thead>
+            <tr>
+                <th>Pos.</th>
+                <th>Beschreibung</th>
+                <th class="zahl">Menge</th>
+                <th>Einheit</th>
+                <th class="zahl">Preis</th>
+                <th class="zahl">MWST</th>
+                <th class="zahl">Betrag</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="zeile : ${r.positionen()}">
+                <td th:text="${zeile.position()}">1</td>
+                <td th:text="${zeile.beschreibung()}">Beschreibung</td>
+                <td class="zahl" th:text="${zeile.menge()}">1</td>
+                <td th:text="${zeile.einheit()}">Stk</td>
+                <td class="zahl" th:text="${zeile.einzelpreis()}">0.00</td>
+                <td class="zahl" th:text="${zeile.mwst()}">8.1 %</td>
+                <td class="zahl" th:text="${zeile.betrag()}">0.00</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="summen">
+        <tr th:each="summe : ${r.summen()}">
+            <td th:text="${summe.bezeichnung()}">Summe</td>
+            <td class="betrag" th:text="${summe.wert()}">0.00</td>
+        </tr>
+        <tr class="total">
+            <td th:text="${r.totalBezeichnung()}">Total CHF</td>
+            <td class="betrag" th:text="${r.total()}">0.00</td>
+        </tr>
+    </table>
+
+    <p class="hinweis" th:text="${r.zahlungshinweis()}">Zahlungshinweis</p>
+</body>
+</html>

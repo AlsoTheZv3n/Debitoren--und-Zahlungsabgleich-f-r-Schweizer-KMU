@@ -1,0 +1,32 @@
+{
+  "beschreibung": "Zwei Zahlungen für eine Rechnung: beide zugeordnet, Rechnung bezahlt",
+  "konto": "QR",
+  "rechnungen": [
+    { "kunde": "Lüthi Bau AG", "betrag": "1000.00", "waehrung": "CHF" }
+  ],
+  "importe": [
+    { "datei": "zwei-zahlungen-1.xml", "status": 201, "neu": 1, "uebersprungen": 0, "ignoriert": 0 },
+    { "datei": "zwei-zahlungen-2.xml", "status": 201, "neu": 1, "uebersprungen": 0, "ignoriert": 0 }
+  ],
+  "zahlungen": [
+    {
+      "bankReferenz": "ZWEI-A",
+      "status": "ZUGEORDNET",
+      "rest": "0.00",
+      "zuordnungen": [
+        { "rechnung": "RE-2026-0001", "betrag": "400.00", "art": "AUTO", "regel": "REFERENZ_EXAKT" }
+      ]
+    },
+    {
+      "bankReferenz": "ZWEI-B",
+      "status": "ZUGEORDNET",
+      "rest": "0.00",
+      "zuordnungen": [
+        { "rechnung": "RE-2026-0001", "betrag": "600.00", "art": "AUTO", "regel": "REFERENZ_EXAKT" }
+      ]
+    }
+  ],
+  "rechnungenNachher": [
+    { "nummer": "RE-2026-0001", "status": "BEZAHLT", "offen": "0.00" }
+  ]
+}

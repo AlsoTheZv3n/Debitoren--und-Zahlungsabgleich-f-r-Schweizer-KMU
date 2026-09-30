@@ -1,0 +1,36 @@
+{
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  extends: ['config:recommended', ':semanticCommits'],
+  timezone: 'Europe/Zurich',
+  // Wöchentlich: Maven, npm, Docker-Images, GitHub Actions und der Maven Wrapper.
+  schedule: ['before 6am on monday'],
+  labels: ['abhaengigkeiten'],
+  packageRules: [
+    {
+      matchManagers: ['maven'],
+      matchPackageNames: ['org.springframework.boot:**', 'org.springframework.modulith:**'],
+      groupName: 'Spring',
+    },
+    {
+      matchManagers: ['npm'],
+      matchUpdateTypes: ['minor', 'patch'],
+      groupName: 'npm (Minor und Patch)',
+    },
+    {
+      // typescript-eslint unterstützt TypeScript 7 noch nicht (Peer-Abhängigkeit < 6.1).
+      matchPackageNames: ['typescript'],
+      allowedVersions: '<6.1',
+    },
+    {
+      // Die Projektplanung legt React Router 7 fest; ein Wechsel auf 8 ist eine bewusste Entscheidung.
+      matchPackageNames: ['react-router'],
+      allowedVersions: '<8',
+    },
+    {
+      // Datenbank-Hauptversionen nur zusammen mit der verwalteten Datenbank in Produktion wechseln.
+      matchDatasources: ['docker'],
+      matchPackageNames: ['postgres'],
+      allowedVersions: '<19',
+    },
+  ],
+}

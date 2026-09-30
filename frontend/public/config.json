@@ -1,0 +1,6 @@
+{
+  "oidc": {
+    "authority": "http://localhost:8081/realms/debitoren",
+    "clientId": "debitoren-spa"
+  }
+}

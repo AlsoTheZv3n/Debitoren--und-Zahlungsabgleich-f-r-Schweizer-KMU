@@ -1,0 +1,7 @@
+# Nur für ./mvnw -Popenapi verify: feste Ports, die nicht mit einem lokal laufenden Backend kollidieren.
+server:
+  port: 18080
+
+management:
+  server:
+    port: 18091

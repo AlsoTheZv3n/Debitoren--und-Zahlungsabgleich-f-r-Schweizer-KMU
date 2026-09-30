@@ -1,0 +1,26 @@
+{
+  "beschreibung": "Unbekannte Referenz: Klärungsliste; Betrag und Name ergeben einen Vorschlag",
+  "konto": "QR",
+  "rechnungen": [
+    { "kunde": "Brunner Marco", "betrag": "88.00", "waehrung": "CHF" }
+  ],
+  "importe": [
+    { "datei": "unbekannte-referenz.xml", "status": 201, "neu": 1, "uebersprungen": 0, "ignoriert": 0 }
+  ],
+  "zahlungen": [
+    {
+      "bankReferenz": "UNBEKANNT-1",
+      "status": "KLAERUNG",
+      "klaerungsgrund": "REFERENZ_UNBEKANNT",
+      "rest": "88.00",
+      "auftraggeber": "M. Brunner",
+      "zuordnungen": [],
+      "vorschlaege": [
+        { "rechnung": "RE-2026-0001", "betrag": "88.00", "regel": "BETRAG_UND_KUNDE", "automatisch": false }
+      ]
+    }
+  ],
+  "rechnungenNachher": [
+    { "nummer": "RE-2026-0001", "status": "OFFEN", "offen": "88.00" }
+  ]
+}

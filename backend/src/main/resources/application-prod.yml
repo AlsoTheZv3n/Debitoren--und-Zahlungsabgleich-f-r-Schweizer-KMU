@@ -1,0 +1,16 @@
+# Staging und Produktion: ohne Vorgabewerte, fehlende Umgebungsvariablen verhindern den Start.
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER_URI}
+          jwk-set-uri: ${OIDC_JWK_SET_URI}
+  # Flyway läuft in Staging und Produktion als eigener Helm-Job vor dem Rollout.
+  flyway:
+    enabled: false
+
+logging:
+  structured:
+    format:
+      console: ecs

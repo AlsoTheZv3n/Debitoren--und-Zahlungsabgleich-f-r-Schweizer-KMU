@@ -1,0 +1,24 @@
+{
+  "beschreibung": "EUR-Zahlung auf CHF-Rechnung: Klärungsliste",
+  "konto": "QR",
+  "rechnungen": [
+    { "kunde": "Lüthi Bau AG", "betrag": "420.00", "waehrung": "CHF" }
+  ],
+  "importe": [
+    { "datei": "eur-auf-chf-rechnung.xml", "status": 201, "neu": 1, "uebersprungen": 0, "ignoriert": 0 }
+  ],
+  "zahlungen": [
+    {
+      "bankReferenz": "EUR-1",
+      "status": "KLAERUNG",
+      "klaerungsgrund": "WAEHRUNG_ABWEICHEND",
+      "rest": "420.00",
+      "waehrung": "EUR",
+      "zuordnungen": [],
+      "vorschlaege": []
+    }
+  ],
+  "rechnungenNachher": [
+    { "nummer": "RE-2026-0001", "status": "OFFEN", "offen": "420.00" }
+  ]
+}

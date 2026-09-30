@@ -1,0 +1,21 @@
+# Automatische Tests: Datenbank aus Testcontainers, Tokens aus TestTokens.
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://keycloak.test/realms/debitoren
+          jwk-set-uri: https://keycloak.test/realms/debitoren/protocol/openid-connect/certs
+
+springdoc:
+  api-docs:
+    enabled: true
+
+debitoren:
+  api-docs-oeffentlich: true
+  dokumente:
+    verzeichnis: target/test-dokumente
+  # Wenige Testdaten, falls ein Test zusätzlich das Profil dev aktiviert.
+  testdaten:
+    kunden-je-mandant: 5
+    rechnungen-je-mandant: 12

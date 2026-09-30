@@ -1,0 +1,115 @@
+# Lokale Umgebung und E2E-Stack.
+#
+#   Nur Infrastruktur (Entwicklung):  docker compose -f deploy/compose/docker-compose.yml up -d
+#   Mit Backend und Frontend (E2E):    docker compose -f deploy/compose/docker-compose.yml --profile app up -d --wait
+#
+# Ports: PostgreSQL 15432, Keycloak 8081, Mailpit 8025 (SMTP 1025), Frontend-Container 8088.
+# Alle Passwörter hier sind reine Entwicklungswerte.
+name: debitoren
+
+services:
+  postgres:
+    image: postgres:18.6-alpine
+    environment:
+      POSTGRES_DB: debitoren
+      POSTGRES_USER: debitoren
+      POSTGRES_PASSWORD: debitoren
+    ports:
+      - "15432:5432"
+    volumes:
+      - postgres-daten:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U debitoren -d debitoren"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.4
+    # Dev-Modus mit eingebetteter Datenbank: der Realm wird bei jedem Neustart frisch importiert.
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      # Aussteller im Token ist immer die Browser-Adresse; das Backend holt die Schlüssel intern.
+      KC_HOSTNAME: http://localhost:8081
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./keycloak/debitoren-realm.json:/opt/keycloak/data/import/debitoren-realm.json:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/9000 &&
+          printf 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 &&
+          grep -q '"UP"' <&3
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 10s
+
+  mailpit:
+    image: axllent/mailpit:v1.31.3
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+  backend:
+    profiles: ["app"]
+    # Gebaut mit: cd backend && ./mvnw spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=debitoren-backend:local
+    image: ${BACKEND_IMAGE:-debitoren-backend:local}
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SERVER_PORT: "8080"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/debitoren
+      SPRING_DATASOURCE_USERNAME: debitoren
+      SPRING_DATASOURCE_PASSWORD: debitoren
+      OIDC_ISSUER_URI: http://localhost:8081/realms/debitoren
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/debitoren/protocol/openid-connect/certs
+      # Weniger Testdaten als die Vorgabe des dev-Profils, damit der Stack schnell startet.
+      DEBITOREN_TESTDATEN_KUNDENJEMANDANT: "25"
+      DEBITOREN_TESTDATEN_RECHNUNGENJEMANDANT: "80"
+      # Das Paketo-Image schreibt nur unter /tmp; die PDFs sind in diesem Stack Wegwerfdaten.
+      DEBITOREN_DOKUMENTE_VERZEICHNIS: /tmp/dokumente
+      # Health-Check des Paketo-Images
+      THC_PORT: "8091"
+      THC_PATH: /actuator/health
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/workspace/health-check"]
+      interval: 5s
+      timeout: 3s
+      retries: 60
+      start_period: 10s
+
+  frontend:
+    profiles: ["app"]
+    # Gebaut mit: docker build -t debitoren-frontend:local frontend
+    image: ${FRONTEND_IMAGE:-debitoren-frontend:local}
+    environment:
+      OIDC_AUTHORITY: http://localhost:8081/realms/debitoren
+      OIDC_CLIENT_ID: debitoren-spa
+      OIDC_ORIGIN: http://localhost:8081
+    ports:
+      - "8088:8080"
+    volumes:
+      # Übernimmt lokal die Rolle des Ingress: /api geht ans Backend.
+      - ./nginx/api-proxy.conf:/etc/nginx/extra/api-proxy.conf:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/ || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  postgres-daten:
