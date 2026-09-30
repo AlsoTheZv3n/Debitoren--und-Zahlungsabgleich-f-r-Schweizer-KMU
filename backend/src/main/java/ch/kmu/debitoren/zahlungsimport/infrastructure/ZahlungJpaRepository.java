@@ -2,6 +2,7 @@ package ch.kmu.debitoren.zahlungsimport.infrastructure;
 
 import ch.kmu.debitoren.zahlungsimport.domain.Zahlung;
 import ch.kmu.debitoren.zahlungsimport.domain.ZahlungRepository;
+import ch.kmu.debitoren.zahlungsimport.domain.Zahlungsstatus;
 import jakarta.persistence.LockModeType;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,6 +22,13 @@ interface ZahlungJpaRepository extends JpaRepository<Zahlung, UUID>, ZahlungRepo
     int BLOCKGROESSE = 1000;
 
     @Lock(LockModeType.OPTIMISTIC_FORCE_INCREMENT)
+    long countByStatus(Zahlungsstatus status);
+
+    @Override
+    default long anzahlMitStatus(Zahlungsstatus status) {
+        return countByStatus(status);
+    }
+
     @Query("select z from Zahlung z where z.id = :id")
     Optional<Zahlung> mitVersionserhoehung(UUID id);
 

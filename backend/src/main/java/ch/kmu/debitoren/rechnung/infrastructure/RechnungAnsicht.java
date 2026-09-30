@@ -1,6 +1,7 @@
 package ch.kmu.debitoren.rechnung.infrastructure;
 
 import ch.kmu.debitoren.rechnung.domain.Rechnungsdarstellung.Rechnungsdokument;
+import ch.kmu.debitoren.rechnung.domain.Rechnungsdarstellung.Rechnungssteller;
 import ch.kmu.debitoren.shared.domain.Adresse;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,13 +37,7 @@ record RechnungAnsicht(
         var waehrung = rechnung.getWaehrung().getCurrencyCode();
         var summen = rechnung.summen();
 
-        var absender = new ArrayList<>(adresszeilen(steller.adresse()));
-        if (steller.mwstNummer() != null) {
-            absender.add("MWST-Nr. " + steller.mwstNummer());
-        }
-        if (steller.email() != null) {
-            absender.add(steller.email());
-        }
+        var absender = absenderzeilen(steller);
 
         var empfaenger = new ArrayList<String>();
         empfaenger.add(rechnung.getEmpfaenger().name());
@@ -96,7 +91,19 @@ record RechnungAnsicht(
                         .formatted(Formate.datum(rechnung.getFaelligAm())));
     }
 
-    private static List<String> adresszeilen(Adresse adresse) {
+    /** Adresse, MWST-Nummer und E-Mail des Absenders, wie sie unter seinem Namen stehen. */
+    static List<String> absenderzeilen(Rechnungssteller steller) {
+        var zeilen = new ArrayList<>(adresszeilen(steller.adresse()));
+        if (steller.mwstNummer() != null) {
+            zeilen.add("MWST-Nr. " + steller.mwstNummer());
+        }
+        if (steller.email() != null) {
+            zeilen.add(steller.email());
+        }
+        return zeilen;
+    }
+
+    static List<String> adresszeilen(Adresse adresse) {
         var zeilen = new ArrayList<String>();
         if (adresse.strasse() != null) {
             zeilen.add(

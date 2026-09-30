@@ -13,6 +13,9 @@ springdoc:
 
 debitoren:
   api-docs-oeffentlich: true
+  # Tests starten den Mahnlauf selbst; der geplante Lauf bleibt aus.
+  mahnlauf:
+    zeitplan: "-"
   dokumente:
     verzeichnis: target/test-dokumente
   # Wenige Testdaten, falls ein Test zusätzlich das Profil dev aktiviert.

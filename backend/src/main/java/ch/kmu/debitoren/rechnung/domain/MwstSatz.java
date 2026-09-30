@@ -14,9 +14,11 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.UUID;
 import org.hibernate.annotations.TenantId;
+import org.hibernate.envers.Audited;
 
 /** MWST-Satz mit Gültigkeitszeitraum; ein neuer Satz ab einem Stichtag ist ein neuer Datensatz. */
 @Entity
+@Audited
 @Table(name = "mwst_satz")
 public class MwstSatz {
 
@@ -64,6 +66,16 @@ public class MwstSatz {
             throw Pruefe.ungueltig("Gültig bis liegt vor Gültig ab");
         }
         this.gueltigBis = gueltigBis;
+    }
+
+    /** Beendet den Satz, weil ab dem Folgetag ein neuer gilt. */
+    public void beenden(LocalDate letzterTag) {
+        Pruefe.vorhanden(letzterTag, "Gültig bis");
+        if (letzterTag.isBefore(gueltigAb)) {
+            throw Pruefe.ungueltig(
+                    "Der neue Satz muss nach dem Beginn des bisherigen Satzes (%s) beginnen".formatted(gueltigAb));
+        }
+        this.gueltigBis = letzterTag;
     }
 
     public boolean giltAm(LocalDate datum) {

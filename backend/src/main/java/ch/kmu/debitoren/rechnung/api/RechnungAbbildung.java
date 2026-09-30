@@ -66,6 +66,7 @@ interface RechnungAbbildung {
                 rechnung.getBemerkung(),
                 rechnung.getPositionen().stream().map(this::zuDto).toList(),
                 zuDto(rechnung.summen()),
+                rechnung.getMahngebuehren().betrag(),
                 offen,
                 rechnung.getFreigegebenAm(),
                 rechnung.getStorniertAm(),

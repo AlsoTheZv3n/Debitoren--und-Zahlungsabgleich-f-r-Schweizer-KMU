@@ -19,7 +19,9 @@ export interface RechnungDto {
   freigegebenAm?: string
   id: string
   kundeId: string
-  /** Total abzüglich Zahlungseingänge; 0 bei Entwürfen, bezahlten und stornierten Rechnungen */
+  /** Gebühren aus freigegebenen Mahnungen; sie gehören zur Forderung */
+  mahngebuehren: number
+  /** Total plus Mahngebühren abzüglich Zahlungseingänge; 0 bei Entwürfen, bezahlten und stornierten Rechnungen */
   offen: number
   positionen: PositionDto[]
   rechnungsdatum: string

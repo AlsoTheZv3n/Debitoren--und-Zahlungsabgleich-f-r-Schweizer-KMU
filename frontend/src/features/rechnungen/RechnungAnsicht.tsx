@@ -23,6 +23,8 @@ import { RechnungsstatusBadge } from '@/shared/ui/RechnungsstatusBadge'
 import { Seitenkopf } from '@/shared/ui/Seitenkopf'
 import { Kopfzelle, Tabelle, Zelle } from '@/shared/ui/Tabelle'
 import { SummenBlock } from './SummenBlock'
+import { RechnungMahnungen } from './RechnungMahnungen'
+import { RechnungVerlauf } from './RechnungVerlauf'
 import { Zahlungseingaenge } from './Zahlungseingaenge'
 import { GespeicherterZahlteil } from './ZahlteilBild'
 
@@ -146,6 +148,14 @@ export function RechnungAnsicht({
                   <dd className="font-mono text-xs leading-5">{rechnung.referenz}</dd>
                 </>
               )}
+              {rechnung.mahngebuehren > 0 && (
+                <>
+                  <dt className="text-slate-500">Mahngebühren</dt>
+                  <dd>
+                    <Betrag betrag={rechnung.mahngebuehren} waehrung={rechnung.waehrung} />
+                  </dd>
+                </>
+              )}
               {nimmtZahlungenAn && (
                 <>
                   <dt className="text-slate-500">Offen</dt>
@@ -210,6 +220,7 @@ export function RechnungAnsicht({
           </section>
 
           {rechnung.status !== 'ENTWURF' && <Zahlungseingaenge rechnung={rechnung} />}
+          {rechnung.status !== 'ENTWURF' && <RechnungMahnungen rechnung={rechnung} />}
 
           {rechnung.bemerkung && (
             <section
@@ -222,6 +233,8 @@ export function RechnungAnsicht({
               <p className="whitespace-pre-line text-slate-700">{rechnung.bemerkung}</p>
             </section>
           )}
+
+          {rechnung.status !== 'ENTWURF' && <RechnungVerlauf rechnung={rechnung} />}
         </div>
 
         {rechnung.status !== 'STORNIERT' && (
@@ -277,6 +290,8 @@ function StornoDialog({
       queryClient.setQueryData(getRechnungLesenQueryKey(rechnung.id), storniert)
       await invalidieren(queryClient, '/api/rechnungen')
       onSchliessen()
+      // Der Verlauf lädt im Hintergrund nach; der Dialog ist dann schon zu.
+      void invalidieren(queryClient, '/api/audit')
     } catch (ausnahme) {
       setFehler(fehlertext(ausnahme))
     }

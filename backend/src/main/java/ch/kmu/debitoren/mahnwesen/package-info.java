@@ -1,4 +1,7 @@
-/** Mahnlauf, Mahnstufen und Freigabe. Folgt in Phase 4. */
+/**
+ * Täglicher Mahnlauf mit konfigurierbaren Stufen, Fristen und Gebühren; Freigabe vor dem Versand, Versand als
+ * PDF per E-Mail.
+ */
 @ApplicationModule(displayName = "Mahnwesen")
 package ch.kmu.debitoren.mahnwesen;
 

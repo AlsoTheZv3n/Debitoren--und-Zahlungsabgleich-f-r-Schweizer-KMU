@@ -22,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 /** Adapter: Spring Data implementiert den Port {@link RechnungRepository}; Hibernate filtert nach Mandant. */
@@ -66,7 +67,7 @@ interface RechnungJpaRepository extends JpaRepository<Rechnung, UUID>, RechnungR
     String POSTEN = """
             select new ch.kmu.debitoren.rechnung.domain.Posten(
                 r.id, r.rechnungsnummer, r.status, r.kundeId, r.empfaengerName, r.referenz, r.faelligAm,
-                r.waehrung, r.total, o.offenerBetrag)
+                r.waehrung, r.total, r.mahngebuehren, o.offenerBetrag)
             from Rechnung r left join OffenerPosten o on o.rechnungId = r.id
             """;
 
@@ -86,6 +87,17 @@ interface RechnungJpaRepository extends JpaRepository<Rechnung, UUID>, RechnungR
             value = POSTEN + "where r.status in :offene order by r.rechnungsnummer",
             countQuery = "select count(r) from Rechnung r where r.status in :offene")
     Page<Posten> postenZahlbar(Collection<Rechnungsstatus> offene, Pageable seite);
+
+    @Query(POSTEN + """
+                    where r.status in :offene and r.faelligAm < :stichtag and o.offenerBetrag > 0
+                    order by r.faelligAm, r.rechnungsnummer
+                    """)
+    List<Posten> postenUeberfaellig(LocalDate stichtag, Collection<Rechnungsstatus> offene);
+
+    /** Ohne Versionsprüfung: Das PDF entsteht nach der Freigabe, während andere die Rechnung schon verbuchen. */
+    @Modifying
+    @Query("update Rechnung r set r.pdfSchluessel = :schluessel where r.id = :id")
+    int pdfSchluesselSetzen(UUID id, String schluessel);
 
     @Override
     default Rechnung speichern(Rechnung rechnung) {
@@ -120,6 +132,16 @@ interface RechnungJpaRepository extends JpaRepository<Rechnung, UUID>, RechnungR
     @Override
     default Page<Posten> zahlbare(Pageable seite) {
         return postenZahlbar(Rechnungsstatus.OFFENE, seite);
+    }
+
+    @Override
+    default List<Posten> ueberfaellige(LocalDate stichtag) {
+        return postenUeberfaellig(stichtag, Rechnungsstatus.OFFENE);
+    }
+
+    @Override
+    default void pdfAbgelegt(UUID id, String schluessel) {
+        pdfSchluesselSetzen(id, schluessel);
     }
 
     @Override

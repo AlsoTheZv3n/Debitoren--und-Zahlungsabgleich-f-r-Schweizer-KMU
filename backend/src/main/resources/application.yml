@@ -17,6 +17,14 @@ spring:
           # Ein Import schreibt tausende Zahlungen; gebündelt geht das in wenigen Roundtrips.
           batch_size: 50
         order_inserts: true
+      # Audit-Log: Tabellen wie in V009__audit.sql; beim Löschen bleibt der letzte Stand im Log.
+      org:
+        hibernate:
+          envers:
+            audit_table_suffix: _aud
+            revision_field_name: rev
+            revision_type_field_name: revtyp
+            store_data_at_delete: true
   servlet:
     multipart:
       # Eine camt.054-Datei mit 10'000 Buchungen hat gut 15 MB; nginx lässt 20 MB durch.
@@ -30,6 +38,11 @@ spring:
       simple:
         # Ereignis-Empfänger laufen asynchron; mehr als vier gleichzeitige PDF-Erstellungen bringen nichts.
         concurrency-limit: 4
+  mail:
+    # Lokal Mailpit aus Compose; produktiv der SMTP-Dienst, siehe application-prod.yml.
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    default-encoding: UTF-8
   modulith:
     events:
       # Zugestellte Ereignisse löschen; nicht zugestellte beim nächsten Start erneut zustellen.
@@ -67,6 +80,10 @@ management:
     health:
       probes:
         enabled: true
+  health:
+    # Ein Ausfall des Mailservers soll keine Instanz aus dem Verkehr ziehen; der Versand lässt sich wiederholen.
+    mail:
+      enabled: false
 
 springdoc:
   api-docs:
@@ -84,3 +101,9 @@ debitoren:
     # Lokal ein Verzeichnis; produktiv S3 (Phase 5).
     ablage: lokal
     verzeichnis: ${DEBITOREN_DOKUMENTE_VERZEICHNIS:data/dokumente}
+  mail:
+    # Absender aller Mahnungen; Antworten gehen an die E-Mail-Adresse des Mandanten.
+    absender: ${DEBITOREN_MAIL_ABSENDER:mahnwesen@debitoren.example}
+  mahnlauf:
+    # Jeden Morgen um 6 Uhr Schweizer Zeit; "-" schaltet den Lauf ab.
+    zeitplan: ${DEBITOREN_MAHNLAUF_ZEITPLAN:0 0 6 * * *}

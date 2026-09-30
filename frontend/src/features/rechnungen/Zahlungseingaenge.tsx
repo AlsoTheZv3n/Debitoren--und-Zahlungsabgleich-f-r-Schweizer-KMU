@@ -38,6 +38,7 @@ export function Zahlungseingaenge({ rechnung }: { rechnung: RechnungDto }) {
     await invalidieren(queryClient, '/api/rechnungen')
     await invalidieren(queryClient, '/api/zuordnungen')
     await invalidieren(queryClient, '/api/zahlungen')
+    await invalidieren(queryClient, '/api/audit')
   }
 
   return (

@@ -29,6 +29,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 import org.springframework.modulith.NamedInterface;
 
 /**
@@ -37,6 +39,7 @@ import org.springframework.modulith.NamedInterface;
  */
 @NamedInterface("modell")
 @Entity
+@Audited
 @Table(name = "rechnung")
 public class Rechnung {
 
@@ -102,6 +105,10 @@ public class Rechnung {
     @Column(nullable = false)
     private BigDecimal total;
 
+    /** Summe der Gebühren aus freigegebenen Mahnungen; sie gehören zur Forderung. */
+    @Column(nullable = false)
+    private BigDecimal mahngebuehren = BigDecimal.ZERO.setScale(2);
+
     private Instant freigegebenAm;
 
     private Instant storniertAm;
@@ -110,16 +117,20 @@ public class Rechnung {
 
     /** Technischer Verweis auf das abgelegte PDF; ändert die Version nicht, stört also keine Bearbeitung. */
     @OptimisticLock(excluded = true)
+    @NotAudited
     private String pdfSchluessel;
 
     @CreationTimestamp
+    @NotAudited
     private Instant erstelltAm;
 
     @UpdateTimestamp
+    @NotAudited
     private Instant geaendertAm;
 
     @OneToMany(mappedBy = "rechnung", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position")
+    @NotAudited
     private List<Rechnungsposition> positionen = new ArrayList<>();
 
     protected Rechnung() {}
@@ -195,8 +206,8 @@ public class Rechnung {
     }
 
     /**
-     * Setzt den Zahlungsstand aus der Summe aller Zuordnungen: nichts bezahlt heisst offen, weniger als das
-     * Total teilbezahlt, das ganze Total bezahlt. Heben Zuordnungen sich auf, geht der Status zurück.
+     * Setzt den Zahlungsstand aus der Summe aller Zuordnungen: nichts bezahlt heisst offen, weniger als die
+     * Forderung teilbezahlt, die ganze Forderung bezahlt. Heben Zuordnungen sich auf, geht der Status zurück.
      */
     public void zahlungsstandSetzen(Geld bezahlt) {
         Pruefe.vorhanden(bezahlt, "Bezahlter Betrag");
@@ -213,7 +224,7 @@ public class Rechnung {
                     "Eine Zahlung in %s passt nicht zu Rechnung %s in %s."
                             .formatted(bezahlt.waehrung(), rechnungsnummer, waehrung));
         }
-        var gesamt = getTotal();
+        var gesamt = getForderung();
         if (bezahlt.istNegativ() || bezahlt.istGroesserAls(gesamt)) {
             throw new FachlicherFehler(
                     RechnungFehlercode.ZAHLUNG_NICHT_MOEGLICH,
@@ -234,8 +245,27 @@ public class Rechnung {
         }
     }
 
-    public void pdfAbgelegt(String schluessel) {
-        this.pdfSchluessel = Pruefe.pflichttext(schluessel, "PDF-Schlüssel", 200);
+    /**
+     * Belastet die Gebühr einer freigegebenen Mahnung. Sie gehört ab jetzt zur Forderung: Bezahlt ist die
+     * Rechnung erst, wenn auch die Gebühren eingegangen sind.
+     */
+    public void mahngebuehrBelasten(Geld gebuehr) {
+        Pruefe.vorhanden(gebuehr, "Mahngebühr");
+        if (!status.istOffen()) {
+            throw new FachlicherFehler(
+                    RechnungFehlercode.MAHNUNG_NICHT_MOEGLICH,
+                    "Rechnung %s ist nicht mehr offen und wird nicht gemahnt.".formatted(rechnungsnummer));
+        }
+        if (!gebuehr.waehrung().equals(waehrung)) {
+            throw new FachlicherFehler(
+                    RechnungFehlercode.MAHNUNG_NICHT_MOEGLICH,
+                    "Eine Gebühr in %s passt nicht zu Rechnung %s in %s."
+                            .formatted(gebuehr.waehrung(), rechnungsnummer, waehrung));
+        }
+        if (gebuehr.istNegativ()) {
+            throw Pruefe.ungueltig("Eine Mahngebühr ist nie negativ");
+        }
+        this.mahngebuehren = getMahngebuehren().plus(gebuehr).betrag();
     }
 
     public boolean istUeberfaellig(LocalDate heute) {
@@ -351,6 +381,15 @@ public class Rechnung {
 
     public Geld getTotal() {
         return new Geld(total, waehrung);
+    }
+
+    public Geld getMahngebuehren() {
+        return new Geld(mahngebuehren, waehrung);
+    }
+
+    /** Was der Kunde insgesamt schuldet: Total plus Mahngebühren. */
+    public Geld getForderung() {
+        return getTotal().plus(getMahngebuehren());
     }
 
     public Instant getFreigegebenAm() {

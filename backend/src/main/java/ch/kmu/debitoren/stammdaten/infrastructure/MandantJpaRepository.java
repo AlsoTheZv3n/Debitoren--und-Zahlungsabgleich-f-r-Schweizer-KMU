@@ -22,6 +22,10 @@ interface MandantJpaRepository extends JpaRepository<Mandant, UUID>, MandantRepo
     }
 
     @Override
+    @Query("select m.id from Mandant m order by m.name")
+    List<UUID> alleIds();
+
+    @Override
     default boolean existiert(UUID id) {
         return existsById(id);
     }

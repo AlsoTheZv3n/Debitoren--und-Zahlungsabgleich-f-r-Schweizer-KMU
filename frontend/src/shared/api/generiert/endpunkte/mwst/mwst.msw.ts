@@ -25,6 +25,18 @@ export const getMwstSaetzeAuflistenResponseMock = (): MwstSatzDto[] =>
     satz: faker.number.float({ fractionDigits: 2 }),
   }))
 
+export const getMwstSatzErfassenResponseMock = (
+  overrideResponse: Partial<Extract<MwstSatzDto, object>> = {},
+): MwstSatzDto => ({
+  bezeichnung: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  code: faker.helpers.arrayElement(['NORMAL', 'REDUZIERT', 'BEHERBERGUNG', 'OHNE'] as const),
+  gueltigAb: faker.date.past().toISOString().slice(0, 10),
+  gueltigBis: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]),
+  id: faker.string.uuid(),
+  satz: faker.number.float({ fractionDigits: 2 }),
+  ...overrideResponse,
+})
+
 export const getMwstSaetzeAuflistenMockHandler = (
   overrideResponse?:
     | MwstSatzDto[]
@@ -48,4 +60,31 @@ export const getMwstSaetzeAuflistenMockHandler = (
     options,
   )
 }
-export const getMwstMock = () => [getMwstSaetzeAuflistenMockHandler()]
+
+export const getMwstSatzErfassenMockHandler = (
+  overrideResponse?:
+    | MwstSatzDto
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<MwstSatzDto> | MwstSatzDto),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    '*/api/mwst-saetze',
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === 'function'
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getMwstSatzErfassenResponseMock(),
+        { status: 201 },
+      )
+    },
+    options,
+  )
+}
+export const getMwstMock = () => [
+  getMwstSaetzeAuflistenMockHandler(),
+  getMwstSatzErfassenMockHandler(),
+]

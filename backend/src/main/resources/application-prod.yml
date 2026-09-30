@@ -9,6 +9,18 @@ spring:
   # Flyway läuft in Staging und Produktion als eigener Helm-Job vor dem Rollout.
   flyway:
     enabled: false
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
 
 logging:
   structured:

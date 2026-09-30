@@ -12,7 +12,8 @@ public enum RechnungFehlercode implements Fehlercode {
     WAEHRUNG_NICHT_ERLAUBT(Fehlerart.UNGUELTIG, "Währung nicht erlaubt"),
     ZAHLTEIL_UNGUELTIG(Fehlerart.UNGUELTIG, "QR-Zahlteil ungültig"),
     PDF_NUR_NACH_FREIGABE(Fehlerart.KONFLIKT, "PDF erst nach der Freigabe"),
-    ZAHLUNG_NICHT_MOEGLICH(Fehlerart.KONFLIKT, "Zahlung nicht möglich");
+    ZAHLUNG_NICHT_MOEGLICH(Fehlerart.KONFLIKT, "Zahlung nicht möglich"),
+    MAHNUNG_NICHT_MOEGLICH(Fehlerart.KONFLIKT, "Mahnung nicht möglich");
 
     private final Fehlerart art;
     private final String titel;

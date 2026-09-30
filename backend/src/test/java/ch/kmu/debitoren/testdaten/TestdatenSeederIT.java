@@ -3,6 +3,7 @@ package ch.kmu.debitoren.testdaten;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import ch.kmu.debitoren.TestMailserver;
 import ch.kmu.debitoren.TestTokens;
 import ch.kmu.debitoren.TestcontainersConfiguration;
 import ch.kmu.debitoren.shared.mandant.MandantKontext;
@@ -10,6 +11,8 @@ import ch.kmu.debitoren.shared.security.Systemkontext;
 import ch.kmu.debitoren.zahlungsimport.application.ZahlungsImport;
 import ch.kmu.debitoren.zahlungsimport.domain.ZahlungsdateiZeile;
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +24,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 /** Der Seeder läuft beim Start im Profil dev; application-test.yml hält die Mengen klein. */
 @SpringBootTest
-@Import({TestcontainersConfiguration.class, TestTokens.class})
+@Import({TestcontainersConfiguration.class, TestTokens.class, TestMailserver.class})
 @ActiveProfiles({"test", "dev"})
 class TestdatenSeederIT {
 
@@ -84,6 +87,25 @@ class TestdatenSeederIT {
                     .as("mindestens die Zahlung mit unbekannter Referenz")
                     .isPositive();
             assertThat(anzahlMitStatus("rechnung", mandant.id(), "BEZAHLT")).isPositive();
+        }
+    }
+
+    @Test
+    void mahnwesenMitStufenUndLaeufenAnFrueherenStichtagen() {
+        for (var mandant : DemoMandanten.ALLE) {
+            assertThat(anzahl("mahnstufe", mandant.id())).isEqualTo(3);
+            assertThat(jdbc.queryForList(
+                            "select stichtag from mahnlauf where mandant_id = ? order by stichtag",
+                            LocalDate.class,
+                            mandant.id()))
+                    .hasSize(3)
+                    .last()
+                    .isEqualTo(LocalDate.now(ZoneId.of("Europe/Zurich")));
+            // Gemahnt werden nur offene Rechnungen; der Seeder wartet dafür auf den Abgleich.
+            assertThat(jdbc.queryForObject("""
+                            select count(*) from mahnung m join rechnung r on r.id = m.rechnung_id
+                            where m.mandant_id = ? and m.status <> 'VERWORFEN' and r.status = 'BEZAHLT'
+                            """, Long.class, mandant.id())).isZero();
         }
     }
 

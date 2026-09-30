@@ -66,11 +66,21 @@ class QrRechnungRenderer implements Rechnungsdarstellung {
     public byte[] pdf(Rechnungsdokument dokument) {
         var kontext = new Context(SCHWEIZ);
         kontext.setVariable("r", RechnungAnsicht.aus(dokument));
-        var rechnung = htmlZuPdf(vorlagen.process("dokumente/rechnung", kontext));
+        return mitZahlteil(htmlZuPdf(vorlagen.process("dokumente/rechnung", kontext)), dokument.zahlteil());
+    }
 
-        var bill = bill(dokument.zahlteil());
+    @Override
+    public byte[] mahnungPdf(Mahndokument dokument) {
+        var kontext = new Context(SCHWEIZ);
+        kontext.setVariable("m", MahnschreibenAnsicht.aus(dokument));
+        return mitZahlteil(htmlZuPdf(vorlagen.process("dokumente/mahnung", kontext)), dokument.zahlteil());
+    }
+
+    /** Setzt den QR-Zahlteil unten auf die letzte Seite; die Vorlagen lassen dort 112 mm frei. */
+    private static byte[] mitZahlteil(byte[] dokument, Zahlteil zahlteil) {
+        var bill = bill(zahlteil);
         bill.getFormat().setOutputSize(OutputSize.A4_PORTRAIT_SHEET);
-        try (var seite = new PDFCanvas(rechnung, PDFCanvas.LAST_PAGE, PDFFontSettings.embeddedLiberationSans())) {
+        try (var seite = new PDFCanvas(dokument, PDFCanvas.LAST_PAGE, PDFFontSettings.embeddedLiberationSans())) {
             QRBill.draw(bill, seite);
             return seite.toByteArray();
         } catch (IOException e) {

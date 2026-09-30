@@ -1,6 +1,7 @@
 package ch.kmu.debitoren.rechnung.application;
 
 import ch.kmu.debitoren.rechnung.domain.Empfaenger;
+import ch.kmu.debitoren.rechnung.domain.Mahnangaben;
 import ch.kmu.debitoren.rechnung.domain.QrReferenz;
 import ch.kmu.debitoren.rechnung.domain.Rechnung;
 import ch.kmu.debitoren.rechnung.domain.Rechnungsdarstellung.Rechnungsangaben;
@@ -54,6 +55,18 @@ class ZahlteilFabrik {
                 freigegeben ? rechnung.getReferenz() : vorschauReferenz(steller),
                 freigegeben ? "Rechnung " + rechnung.getRechnungsnummer() : "Vorschau",
                 angaben);
+    }
+
+    /** Zahlteil eines Mahnschreibens: der offene Betrag samt Gebühren unter der Referenz der Rechnung. */
+    Zahlteil fuerMahnung(Rechnung rechnung, Rechnungssteller steller, Empfaenger zahler, Mahnangaben angaben) {
+        return new Zahlteil(
+                steller,
+                rechnung.getWaehrung(),
+                angaben.offen().istPositiv() ? angaben.offen() : null,
+                zahler,
+                rechnung.getReferenz(),
+                "%s zu Rechnung %s".formatted(angaben.titel(), rechnung.getRechnungsnummer()),
+                null);
     }
 
     Zahlteil vorschau(Rechnungssteller steller, Currency waehrung, Geld total, Empfaenger zahler) {

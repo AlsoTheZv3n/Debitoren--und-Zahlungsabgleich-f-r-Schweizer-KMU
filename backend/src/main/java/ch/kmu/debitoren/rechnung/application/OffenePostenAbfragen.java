@@ -6,6 +6,7 @@ import ch.kmu.debitoren.rechnung.domain.Zahlungsreferenz;
 import ch.kmu.debitoren.shared.domain.Geld;
 import ch.kmu.debitoren.shared.fehler.FachlicherFehler;
 import ch.kmu.debitoren.shared.mandant.MandantKontext;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -62,5 +63,12 @@ public class OffenePostenAbfragen {
     public Page<Posten> zahlbare(Pageable seite) {
         MandantKontext.erforderlich();
         return rechnungen.zahlbare(seite);
+    }
+
+    /** Offene und teilbezahlte Rechnungen, die vor dem Stichtag fällig waren; für den Mahnlauf. */
+    @PreAuthorize("hasRole('LESER')")
+    public List<Posten> ueberfaellige(LocalDate stichtag) {
+        MandantKontext.erforderlich();
+        return rechnungen.ueberfaellige(stichtag);
     }
 }

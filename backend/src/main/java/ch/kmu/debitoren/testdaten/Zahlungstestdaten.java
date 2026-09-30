@@ -28,8 +28,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 /**
- * Zahlungen zu den Testrechnungen: etwa 60 % bezahlt, 10 % teilbezahlt, der Rest offen, dazu je ein Beispiel
- * für die Klärungsliste. Die Zahlungen laufen als camt.054-Dateien je Monat durch den echten Import und den
+ * Zahlungen zu den Testrechnungen: Was seit mehr als 120 Tagen fällig ist, ist fast immer bezahlt; von den
+ * jüngeren Rechnungen etwa 60 % bezahlt, 10 % teilbezahlt, der Rest offen. Dazu je ein Beispiel für die
+ * Klärungsliste. Die Zahlungen laufen als camt.054-Dateien je Monat durch den echten Import und den
  * Abgleich, so zeigen die Testdaten genau, was die Anwendung mit echten Bankdateien macht.
  */
 @Component
@@ -39,6 +40,7 @@ class Zahlungstestdaten {
     private static final Logger LOG = LoggerFactory.getLogger(Zahlungstestdaten.class);
     private static final ZoneId SCHWEIZ = ZoneId.of("Europe/Zurich");
     private static final int SEITE = 200;
+    private static final int TAGE_BIS_FAST_ALLES_BEZAHLT = 120;
 
     private final OffenePostenAbfragen offenePosten;
     private final MandantenAbfragen mandanten;
@@ -73,11 +75,13 @@ class Zahlungstestdaten {
         var ohneZahlung = new ArrayList<Posten>();
         for (var posten : alleZahlbaren()) {
             int wurf = zufall.nextInt(100);
+            // Ältere Rechnungen sind fast alle bezahlt; die wenigen übrigen sind Fälle für das Mahnwesen.
+            boolean alt = posten.faelligAm().isBefore(heute.minusDays(TAGE_BIS_FAST_ALLES_BEZAHLT));
             var valuta = frueher(posten.faelligAm().minusDays(zufall.nextInt(21)), heute);
             var bankReferenz = "SEED-%s-%05d".formatted(kennung, gutschriften.size() + 1);
-            if (wurf < 60) {
+            if (alt ? wurf < 97 : wurf < 60) {
                 gutschriften.add(gutschrift(bankReferenz, valuta, posten.offen(), posten));
-            } else if (wurf < 70) {
+            } else if (!alt && wurf < 70) {
                 gutschriften.add(gutschrift(bankReferenz, valuta, CamtTestdateien.teilbetrag(posten.offen()), posten));
             } else {
                 ohneZahlung.add(posten);

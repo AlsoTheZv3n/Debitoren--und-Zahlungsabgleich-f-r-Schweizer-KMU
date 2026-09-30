@@ -36,7 +36,8 @@ import org.springframework.stereotype.Component;
 /**
  * Legt beim Start im Profil {@code dev} deterministische Testdaten an, sofern sie fehlen: zwei Mandanten,
  * je Mandant Kunden und Rechnungen über 18 Monate. Der feste Zufalls-Seed sorgt dafür, dass jede Instanz
- * dieselben Daten erhält. Zahlungen kommen als camt.054-Dateien durch den echten Import ({@link Zahlungstestdaten}).
+ * dieselben Daten erhält. Zahlungen kommen als camt.054-Dateien durch den echten Import ({@link Zahlungstestdaten}),
+ * Mahnungen aus Mahnläufen an früheren Stichtagen ({@link Mahntestdaten}).
  */
 @Component
 @Profile("dev")
@@ -55,6 +56,7 @@ class TestdatenSeeder implements ApplicationRunner {
     private final KundenVerwaltung kundenVerwaltung;
     private final RechnungVerwaltung rechnungVerwaltung;
     private final Zahlungstestdaten zahlungen;
+    private final Mahntestdaten mahnungen;
     private final TestdatenEigenschaften eigenschaften;
     private final Clock uhr;
 
@@ -66,6 +68,7 @@ class TestdatenSeeder implements ApplicationRunner {
             KundenVerwaltung kundenVerwaltung,
             RechnungVerwaltung rechnungVerwaltung,
             Zahlungstestdaten zahlungen,
+            Mahntestdaten mahnungen,
             TestdatenEigenschaften eigenschaften,
             Clock uhr) {
         this.mandantenAbfragen = mandantenAbfragen;
@@ -75,6 +78,7 @@ class TestdatenSeeder implements ApplicationRunner {
         this.kundenVerwaltung = kundenVerwaltung;
         this.rechnungVerwaltung = rechnungVerwaltung;
         this.zahlungen = zahlungen;
+        this.mahnungen = mahnungen;
         this.eigenschaften = eigenschaften;
         this.uhr = uhr;
     }
@@ -86,6 +90,7 @@ class TestdatenSeeder implements ApplicationRunner {
             Systemkontext.fuerMandant(mandant.id(), () -> {
                 fuellen(mandant);
                 zahlungen.erzeugen(mandant.id(), eigenschaften.seed());
+                mahnungen.erzeugen();
             });
         }
     }

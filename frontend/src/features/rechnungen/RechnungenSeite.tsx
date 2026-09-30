@@ -142,6 +142,7 @@ export function RechnungenSeite() {
   const { hatRolle } = useRollen()
   const suche = parameter.get('suche') ?? ''
   const status = alsStatus(parameter.get('status'))
+  const nurOffene = parameter.get('offen') === 'ja'
   const ueberfaellig = parameter.get('ueberfaellig') === 'ja'
   const sortierung = alsSortierung(parameter.get('sortierung'))
   const seite = Number(parameter.get('seite') ?? '0')
@@ -187,6 +188,7 @@ export function RechnungenSeite() {
     {
       suche: suche || undefined,
       status,
+      offen: nurOffene || undefined,
       ueberfaellig: ueberfaellig || undefined,
       sortierung,
       seite,
@@ -194,7 +196,7 @@ export function RechnungenSeite() {
     },
     { query: { placeholderData: keepPreviousData } },
   )
-  const gefiltert = suche !== '' || status !== undefined || ueberfaellig
+  const gefiltert = suche !== '' || status !== undefined || nurOffene || ueberfaellig
 
   return (
     <>
@@ -247,6 +249,15 @@ export function RechnungenSeite() {
                 </option>
               ))}
             </Auswahl>
+          </label>
+          <label className="flex items-center gap-2 text-sm text-slate-700">
+            <Ankreuzfeld
+              checked={nurOffene}
+              onChange={(ereignis) => {
+                filtern('offen', ereignis.target.checked ? 'ja' : undefined)
+              }}
+            />
+            Nur offene
           </label>
           <label className="flex items-center gap-2 text-sm text-slate-700">
             <Ankreuzfeld

@@ -1,5 +1,6 @@
 package ch.kmu.debitoren;
 
+import ch.kmu.debitoren.mahnwesen.application.Mahnstufen;
 import ch.kmu.debitoren.rechnung.application.MwstSaetze;
 import ch.kmu.debitoren.shared.domain.Ids;
 import ch.kmu.debitoren.shared.mandant.MandantFilter;
@@ -22,7 +23,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
  * Alle Unterklassen teilen sich einen Spring-Kontext und damit einen Datenbank-Container.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import({TestcontainersConfiguration.class, TestTokens.class})
+@Import({TestcontainersConfiguration.class, TestTokens.class, TestMailserver.class})
 @AutoConfigureRestTestClient
 @AutoConfigureMetrics
 @ActiveProfiles("test")
@@ -40,7 +41,10 @@ public abstract class ApiTestBasis {
     @Autowired
     private MwstSaetze mwstSaetze;
 
-    /** Mandant mit QR-IBAN und den gesetzlichen MWST-Sätzen. */
+    @Autowired
+    private Mahnstufen mahnstufen;
+
+    /** Mandant mit QR-IBAN, den gesetzlichen MWST-Sätzen und den Standard-Mahnstufen. */
     protected UUID mandantMitQrIban(String name) {
         return mandant(name, QR_IBAN);
     }
@@ -56,7 +60,10 @@ public abstract class ApiTestBasis {
                 insert into mandant (id, name, strasse, hausnummer, plz, ort, iban, qr_iban, mwst_nummer)
                 values (?, ?, 'Marktgasse', '28', '3011', 'Bern', ?, ?, 'CHE-100.200.300 MWST')
                 """, id, name, qrIban == null ? IBAN : "CH5800791123000889012", qrIban);
-        Systemkontext.fuerMandant(id, mwstSaetze::standardSaetzeAnlegen);
+        Systemkontext.fuerMandant(id, () -> {
+            mwstSaetze.standardSaetzeAnlegen();
+            mahnstufen.standardAnlegen();
+        });
         return id;
     }
 

@@ -89,7 +89,7 @@ public class Rechnungsdokumente {
             // Gleichzeitig erstellt, etwa durch Download und Ereignis: das zuerst abgelegte gilt.
             inhalt = ablage.lesen(schluessel).orElseThrow();
         }
-        rechnung.pdfAbgelegt(schluessel);
+        rechnungen.pdfAbgelegt(rechnung.getId(), schluessel);
         return inhalt;
     }
 

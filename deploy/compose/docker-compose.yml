@@ -74,6 +74,9 @@ services:
       DEBITOREN_TESTDATEN_RECHNUNGENJEMANDANT: "80"
       # Das Paketo-Image schreibt nur unter /tmp; die PDFs sind in diesem Stack Wegwerfdaten.
       DEBITOREN_DOKUMENTE_VERZEICHNIS: /tmp/dokumente
+      # Mahnungen gehen an Mailpit; die E2E-Tests lesen sie über dessen API.
+      MAIL_HOST: mailpit
+      MAIL_PORT: "1025"
       # Health-Check des Paketo-Images
       THC_PORT: "8091"
       THC_PATH: /actuator/health
@@ -82,6 +85,8 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     healthcheck:
       test: ["CMD", "/workspace/health-check"]
       interval: 5s

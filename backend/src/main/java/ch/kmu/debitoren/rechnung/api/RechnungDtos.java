@@ -5,6 +5,7 @@ import ch.kmu.debitoren.rechnung.domain.Rechnungsstatus;
 import ch.kmu.debitoren.shared.domain.Referenzart;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Max;
@@ -69,10 +70,13 @@ final class RechnungDtos {
             @NotNull List<PositionDto> positionen,
             @NotNull SummenDto summen,
 
+            @NotNull @Schema(description = "Gebühren aus freigegebenen Mahnungen; sie gehören zur Forderung")
+            BigDecimal mahngebuehren,
+
             @NotNull
             @Schema(
-                    description =
-                            "Total abzüglich Zahlungseingänge; 0 bei Entwürfen, bezahlten und stornierten Rechnungen")
+                    description = "Total plus Mahngebühren abzüglich Zahlungseingänge; 0 bei Entwürfen, bezahlten und"
+                            + " stornierten Rechnungen")
             BigDecimal offen,
 
             Instant freigegebenAm,
@@ -153,6 +157,15 @@ final class RechnungDtos {
     record StornoDto(
             @NotNull Long version,
             @NotBlank @Size(max = 200) String grund) {}
+
+    record NeuerMwstSatzDto(
+            @NotNull MwstCode code,
+
+            @NotNull @DecimalMin("0.00") @DecimalMax("99.99") @Digits(integer = 2, fraction = 2)
+            BigDecimal satz,
+
+            @NotNull @Schema(description = "Ab diesem Tag gilt der Satz; der bisherige endet am Vortag")
+            LocalDate gueltigAb) {}
 
     record MwstSatzDto(
             @NotNull UUID id,

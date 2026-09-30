@@ -119,6 +119,14 @@ class MandantVerwaltungTest {
         }
 
         @Override
+        public List<UUID> alleIds() {
+            return mandanten.values().stream()
+                    .sorted(Comparator.comparing(Mandant::getName))
+                    .map(Mandant::getId)
+                    .toList();
+        }
+
+        @Override
         public Mandant speichern(Mandant mandant) {
             mandanten.put(mandant.getId(), mandant);
             return mandant;

@@ -7,6 +7,7 @@ import ch.kmu.debitoren.zahlungsimport.domain.Klaerungsgrund;
 import ch.kmu.debitoren.zahlungsimport.domain.Zahlung;
 import ch.kmu.debitoren.zahlungsimport.domain.ZahlungRepository;
 import ch.kmu.debitoren.zahlungsimport.domain.ZahlungsimportFehlercode;
+import ch.kmu.debitoren.zahlungsimport.domain.Zahlungsstatus;
 import java.util.Objects;
 import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,6 +26,14 @@ public class Zahlungsstand {
 
     Zahlungsstand(ZahlungRepository zahlungen) {
         this.zahlungen = zahlungen;
+    }
+
+    /** Zahlungen, die der Abgleich nach dem Import noch nicht bearbeitet hat. */
+    @PreAuthorize("hasRole('LESER')")
+    @Transactional(readOnly = true)
+    public long unbearbeitet() {
+        MandantKontext.erforderlich();
+        return zahlungen.anzahlMitStatus(Zahlungsstatus.OFFEN);
     }
 
     @PreAuthorize("hasRole('LESER')")

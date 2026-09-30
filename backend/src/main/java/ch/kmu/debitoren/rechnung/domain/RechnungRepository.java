@@ -35,4 +35,10 @@ public interface RechnungRepository {
 
     /** Alle offenen und teilbezahlten Rechnungen nach Nummer, etwa für Testdateien. */
     Page<Posten> zahlbare(Pageable seite);
+
+    /** Offene und teilbezahlte Rechnungen mit offenem Betrag, die vor dem Stichtag fällig waren; älteste zuerst. */
+    List<Posten> ueberfaellige(LocalDate stichtag);
+
+    /** Vermerkt das abgelegte PDF, ohne die Version zu prüfen oder zu erhöhen. */
+    void pdfAbgelegt(UUID id, String schluessel);
 }

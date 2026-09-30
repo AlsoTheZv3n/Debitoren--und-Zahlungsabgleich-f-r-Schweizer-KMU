@@ -34,14 +34,26 @@ public class MandantenAbfragen {
         return mandanten.existiert(id);
     }
 
-    /** Der Mandant, für den gerade gearbeitet wird. */
+    /** Alle Mandanten, etwa für den täglichen Mahnlauf; nur im Systemkontext. */
+    @PreAuthorize("hasRole('SYSTEM')")
+    public List<UUID> alleIds() {
+        return mandanten.alleIds();
+    }
+
+    /** Alle Angaben des aktuellen Mandanten, etwa für die Einstellungen. */
     @PreAuthorize("hasRole('LESER')")
-    public MandantInfo aktueller() {
+    public Mandant aktuellerMandant() {
         var id = MandantKontext.erforderlich();
-        var mandant = mandanten
+        return mandanten
                 .finde(id)
                 .orElseThrow(() -> new FachlicherFehler(
                         StammdatenFehlercode.MANDANT_NICHT_GEFUNDEN, "Mandant %s nicht gefunden".formatted(id)));
+    }
+
+    /** Der Mandant, für den gerade gearbeitet wird. */
+    @PreAuthorize("hasRole('LESER')")
+    public MandantInfo aktueller() {
+        var mandant = aktuellerMandant();
         return new MandantInfo(
                 mandant.getId(),
                 mandant.getName(),

@@ -2,8 +2,11 @@ package ch.kmu.debitoren.stammdaten.application;
 
 import ch.kmu.debitoren.shared.fehler.AllgemeinerFehlercode;
 import ch.kmu.debitoren.shared.fehler.FachlicherFehler;
+import ch.kmu.debitoren.shared.mandant.MandantKontext;
 import ch.kmu.debitoren.stammdaten.domain.Mandant;
 import ch.kmu.debitoren.stammdaten.domain.MandantRepository;
+import ch.kmu.debitoren.stammdaten.domain.StammdatenFehlercode;
+import java.util.Objects;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -36,5 +39,27 @@ public class MandantVerwaltung {
         var gespeichert = mandanten.speichern(mandant);
         ereignisse.publishEvent(new MandantAngelegt(gespeichert.getId()));
         return gespeichert;
+    }
+
+    /**
+     * Ändert den Mandanten, für den gerade gearbeitet wird; {@code version} ist der Stand, den der Admin bearbeitet
+     * hat. Bereits freigegebene Rechnungen und ihre PDFs bleiben, wie sie sind.
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    public Mandant aendern(long version, MandantDaten daten) {
+        var id = MandantKontext.erforderlich();
+        var mandant = mandanten
+                .finde(id)
+                .orElseThrow(() -> new FachlicherFehler(
+                        StammdatenFehlercode.MANDANT_NICHT_GEFUNDEN, "Mandant %s nicht gefunden".formatted(id)));
+        if (!Objects.equals(mandant.getVersion(), version)) {
+            throw new FachlicherFehler(
+                    AllgemeinerFehlercode.GLEICHZEITIG_GEAENDERT,
+                    "Der Mandant wurde inzwischen geändert. Bitte neu laden.");
+        }
+        mandant.aendern(daten.name(), daten.adresse(), daten.iban(), daten.qrIban());
+        mandant.rechnungsangabenSetzen(daten.mwstNummer(), daten.email(), daten.rundungFuenfRappen());
+        return mandant;
     }
 }

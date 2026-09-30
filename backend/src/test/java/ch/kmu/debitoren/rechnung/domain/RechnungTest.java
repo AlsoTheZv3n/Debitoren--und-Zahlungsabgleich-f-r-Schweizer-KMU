@@ -140,6 +140,37 @@ class RechnungTest {
     }
 
     @Test
+    void mahngebuehrenGehoerenZurForderung() {
+        var rechnung = freigegeben();
+        var total = rechnung.getTotal();
+
+        rechnung.mahngebuehrBelasten(Geld.chf("20.00"));
+        rechnung.mahngebuehrBelasten(Geld.chf("0.00"));
+        assertThat(rechnung.getMahngebuehren()).isEqualTo(Geld.chf("20.00"));
+        assertThat(rechnung.getForderung()).isEqualTo(total.plus(Geld.chf("20.00")));
+
+        // Das Total allein bezahlt die Rechnung nicht mehr, erst zusammen mit der Gebühr.
+        rechnung.zahlungsstandSetzen(total);
+        assertThat(rechnung.getStatus()).isEqualTo(Rechnungsstatus.TEILBEZAHLT);
+        rechnung.zahlungsstandSetzen(rechnung.getForderung());
+        assertThat(rechnung.getStatus()).isEqualTo(Rechnungsstatus.BEZAHLT);
+
+        erwarteFehler(() -> rechnung.mahngebuehrBelasten(Geld.chf("10.00")), RechnungFehlercode.MAHNUNG_NICHT_MOEGLICH);
+    }
+
+    @Test
+    void mahngebuehrNurInDerWaehrungDerRechnungUndNieNegativ() {
+        var rechnung = freigegeben();
+        erwarteFehler(() -> rechnung.mahngebuehrBelasten(Geld.eur("20.00")), RechnungFehlercode.MAHNUNG_NICHT_MOEGLICH);
+        assertThatThrownBy(() -> rechnung.mahngebuehrBelasten(Geld.chf("-5.00")))
+                .isInstanceOf(FachlicherFehler.class)
+                .hasMessageContaining("negativ");
+        erwarteFehler(
+                () -> rechnung().standardposition().entwurf().mahngebuehrBelasten(Geld.chf("20.00")),
+                RechnungFehlercode.MAHNUNG_NICHT_MOEGLICH);
+    }
+
+    @Test
     void entwuerfeUndStornierteRechnungenNehmenKeineZahlungAn() {
         erwarteFehler(
                 () -> rechnung().standardposition().entwurf().zahlungsstandSetzen(Geld.chf("10.00")),
@@ -224,13 +255,6 @@ class RechnungTest {
         assertThatThrownBy(() -> rechnung().position(" ", "1", "1.00", NORMAL_2024))
                 .isInstanceOf(FachlicherFehler.class)
                 .hasMessageContaining("Beschreibung");
-    }
-
-    @Test
-    void pdfVerweisWirdFestgehalten() {
-        var rechnung = freigegeben();
-        rechnung.pdfAbgelegt("rechnungen/a/b.pdf");
-        assertThat(rechnung.getPdfSchluessel()).isEqualTo("rechnungen/a/b.pdf");
     }
 
     @Test

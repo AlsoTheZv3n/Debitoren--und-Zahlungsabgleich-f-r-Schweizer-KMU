@@ -8,7 +8,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router'
-import { useZahlungenSuchen } from '@/shared/api/generiert/endpunkte'
+import { useMahnungenSuchen, useZahlungenSuchen } from '@/shared/api/generiert/endpunkte'
 import { cn } from '@/shared/lib/cn'
 import { useRollen, type Rolle } from '@/shared/lib/rollen'
 
@@ -18,6 +18,8 @@ interface Eintrag {
   symbol: LucideIcon
   ende?: boolean
   rolle?: Rolle
+  /** Zeigt die Zahl offener Mahnvorschläge neben dem Eintrag. */
+  vorschlaege?: boolean
   unterpunkte?: { ziel: string; titel: string; zaehler?: boolean }[]
 }
 
@@ -34,7 +36,7 @@ const EINTRAEGE: Eintrag[] = [
       { ziel: '/zahlungen/klaerung', titel: 'Klärungsliste', zaehler: true },
     ],
   },
-  { ziel: '/mahnwesen', titel: 'Mahnwesen', symbol: BellRing },
+  { ziel: '/mahnwesen', titel: 'Mahnwesen', symbol: BellRing, vorschlaege: true },
   { ziel: '/einstellungen', titel: 'Einstellungen', symbol: Settings, rolle: 'ADMIN' },
 ]
 
@@ -53,6 +55,9 @@ export function Seitenleiste() {
     { query: { refetchInterval: 60_000 } },
   )
   const offeneKlaerungen = klaerung.data?.anzahlElemente ?? 0
+  const mahnvorschlaege =
+    useMahnungenSuchen({ status: 'VORSCHLAG', groesse: 1 }, { query: { refetchInterval: 60_000 } })
+      .data?.anzahlElemente ?? 0
 
   return (
     <nav
@@ -60,7 +65,7 @@ export function Seitenleiste() {
       className="min-w-0 border-b border-slate-200 bg-white md:border-r md:border-b-0"
     >
       <ul className="flex gap-1 overflow-x-auto p-2 md:sticky md:top-14 md:flex-col md:p-3">
-        {sichtbar.map(({ ziel, titel, symbol: Zeichen, ende, unterpunkte }) => (
+        {sichtbar.map(({ ziel, titel, symbol: Zeichen, ende, unterpunkte, vorschlaege }) => (
           <li key={ziel}>
             <NavLink
               to={unterpunkte?.[0]?.ziel ?? ziel}
@@ -74,6 +79,9 @@ export function Seitenleiste() {
             >
               <Zeichen aria-hidden className="size-4 shrink-0" />
               {titel}
+              {vorschlaege && mahnvorschlaege > 0 && (
+                <Zaehler anzahl={mahnvorschlaege} bedeutung="Vorschläge" variante="neutral" />
+              )}
             </NavLink>
             {unterpunkte && (
               <ul className="mt-1 ml-6 hidden space-y-0.5 border-l border-slate-200 pl-2 md:block">
@@ -88,7 +96,11 @@ export function Seitenleiste() {
                       {punkt.titel}
                       {punkt.zaehler && offeneKlaerungen > 0 && ' '}
                       {punkt.zaehler && offeneKlaerungen > 0 && (
-                        <Zaehler anzahl={offeneKlaerungen} />
+                        <Zaehler
+                          anzahl={offeneKlaerungen}
+                          bedeutung="ungeklärt"
+                          variante="klaerung"
+                        />
                       )}
                     </NavLink>
                   </li>
@@ -102,12 +114,25 @@ export function Seitenleiste() {
   )
 }
 
-/** Anzahl ungeklärter Zahlungen; für Screenreader mit Text statt nur einer Zahl. */
-function Zaehler({ anzahl }: { anzahl: number }) {
+/** Anzahl ungeklärter Zahlungen oder offener Vorschläge; für Screenreader mit Text statt nur einer Zahl. */
+function Zaehler({
+  anzahl,
+  bedeutung,
+  variante,
+}: {
+  anzahl: number
+  bedeutung: string
+  variante: 'klaerung' | 'neutral'
+}) {
   return (
-    <span className="ml-auto rounded-full bg-violet-100 px-1.5 text-xs font-medium text-violet-700 tabular-nums">
+    <span
+      className={cn(
+        'ml-auto rounded-full px-1.5 text-xs font-medium tabular-nums',
+        variante === 'klaerung' ? 'bg-violet-100 text-violet-700' : 'bg-slate-100 text-slate-700',
+      )}
+    >
       {anzahl}
-      <span className="sr-only"> ungeklärt</span>
+      <span className="sr-only"> {bedeutung}</span>
     </span>
   )
 }

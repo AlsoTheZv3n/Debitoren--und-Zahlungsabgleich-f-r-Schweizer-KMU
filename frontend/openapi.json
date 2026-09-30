@@ -12,6 +12,113 @@
     "keycloak" : [ ]
   } ],
   "paths" : {
+    "/api/audit" : {
+      "get" : {
+        "operationId" : "auditLogLesen",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "objektart",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "RECHNUNG", "ZUORDNUNG", "MAHNUNG", "MAHNSTUFE", "KUNDE", "MANDANT", "MWST_SATZ" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "benutzer",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "seite",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "groesse",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 25,
+            "maximum" : 200,
+            "minimum" : 1
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SeiteAuditEintragDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Audit-Log des Mandanten, neueste Änderung zuerst (Admin)",
+        "tags" : [ "Audit" ]
+      }
+    },
+    "/api/audit/rechnung/{rechnungId}" : {
+      "get" : {
+        "operationId" : "verlaufDerRechnung",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "rechnungId",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/AuditEintragDto"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Verlauf einer Rechnung samt Zahlungseingängen und Mahnungen, neueste Änderung zuerst",
+        "tags" : [ "Audit" ]
+      }
+    },
     "/api/kunden" : {
       "get" : {
         "operationId" : "kundenSuchen",
@@ -191,6 +298,524 @@
         "tags" : [ "Kunden" ]
       }
     },
+    "/api/mahnlaeufe" : {
+      "get" : {
+        "operationId" : "mahnlaeufeAuflisten",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "anzahl",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 5,
+            "maximum" : 50,
+            "minimum" : 1
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/MahnlaufDto"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Die letzten Mahnläufe, neueste zuerst",
+        "tags" : [ "Mahnungen" ]
+      },
+      "post" : {
+        "operationId" : "mahnlaufAusfuehren",
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MahnlaufDto"
+                }
+              }
+            },
+            "description" : "Created"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Mahnlauf mit Stichtag heute von Hand auslösen",
+        "tags" : [ "Mahnungen" ]
+      }
+    },
+    "/api/mahnstufen" : {
+      "get" : {
+        "operationId" : "mahnstufenAuflisten",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/MahnstufeDto"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Mahnstufen des Mandanten, erste Stufe zuerst",
+        "tags" : [ "Mahnstufen" ]
+      },
+      "put" : {
+        "operationId" : "mahnstufenFestlegen",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MahnstufenAnfrageDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/MahnstufeDto"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Alle Mahnstufen auf einmal festlegen; die Reihenfolge ergibt die Stufe",
+        "tags" : [ "Mahnstufen" ]
+      }
+    },
+    "/api/mahnungen" : {
+      "get" : {
+        "operationId" : "mahnungenSuchen",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "VORSCHLAG", "FREIGEGEBEN", "VERSENDET", "VERWORFEN" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "rechnungId",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "query",
+          "name" : "suche",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "seite",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "groesse",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 25,
+            "maximum" : 500,
+            "minimum" : 1
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SeiteMahnungDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Mahnungen; mit status=VORSCHLAG die Vorschläge des Mahnlaufs, älteste Fälligkeit zuerst",
+        "tags" : [ "Mahnungen" ]
+      }
+    },
+    "/api/mahnungen/freigabe" : {
+      "post" : {
+        "operationId" : "mahnungenFreigeben",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FreigabeAnfrageDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FreigabeErgebnisDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Vorschläge gesammelt freigeben; jede Mahnung einzeln, Konflikte stehen im Ergebnis",
+        "tags" : [ "Mahnungen" ]
+      }
+    },
+    "/api/mahnungen/rechnung/{rechnungId}" : {
+      "get" : {
+        "operationId" : "mahnungenDerRechnung",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "rechnungId",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/MahnungDto"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Alle Mahnungen einer Rechnung, erste Stufe zuerst",
+        "tags" : [ "Mahnungen" ]
+      }
+    },
+    "/api/mahnungen/{id}" : {
+      "get" : {
+        "operationId" : "mahnungLesen",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MahnungDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Eine Mahnung",
+        "tags" : [ "Mahnungen" ]
+      }
+    },
+    "/api/mahnungen/{id}/pdf" : {
+      "get" : {
+        "operationId" : "mahnungPdf",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Mahnschreiben mit QR-Zahlteil; bei Vorschlägen eine Vorschau mit dem heutigen Stand",
+        "tags" : [ "Mahnungen" ]
+      }
+    },
+    "/api/mahnungen/{id}/postversand" : {
+      "post" : {
+        "operationId" : "mahnungPerPostVersendet",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VersionDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MahnungDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Bestätigen, dass das Schreiben per Post ging",
+        "tags" : [ "Mahnungen" ]
+      }
+    },
+    "/api/mahnungen/{id}/versand" : {
+      "post" : {
+        "operationId" : "mahnungErneutSenden",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VersionDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MahnungDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Nach einem Versandfehler erneut per E-Mail senden",
+        "tags" : [ "Mahnungen" ]
+      }
+    },
+    "/api/mahnungen/{id}/verwerfen" : {
+      "post" : {
+        "operationId" : "mahnungVerwerfen",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VerwerfenDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MahnungDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Vorschlag verwerfen, auf Wunsch mit Sperre",
+        "tags" : [ "Mahnungen" ]
+      }
+    },
     "/api/mandanten" : {
       "get" : {
         "operationId" : "mandantenAuflisten",
@@ -220,6 +845,72 @@
           }
         },
         "summary" : "Mandanten, für die der angemeldete Benutzer arbeiten darf",
+        "tags" : [ "Mandanten" ]
+      }
+    },
+    "/api/mandanten/aktuell" : {
+      "get" : {
+        "operationId" : "mandantLesen",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MandantDetailDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Alle Angaben des gewählten Mandanten",
+        "tags" : [ "Mandanten" ]
+      },
+      "put" : {
+        "operationId" : "mandantAendern",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MandantAenderungDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MandantDetailDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Gewählten Mandanten ändern; freigegebene Rechnungen behalten Konto und Referenz",
         "tags" : [ "Mandanten" ]
       }
     },
@@ -290,6 +981,43 @@
           }
         },
         "summary" : "MWST-Sätze des Mandanten; mit Stichtag nur die an diesem Tag gültigen",
+        "tags" : [ "MWST" ]
+      },
+      "post" : {
+        "operationId" : "mwstSatzErfassen",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/NeuerMwstSatzDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MwstSatzDto"
+                }
+              }
+            },
+            "description" : "Created"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Neuen Satz ab einem Stichtag erfassen; der bisherige Satz desselben Codes endet am Vortag",
         "tags" : [ "MWST" ]
       }
     },
@@ -770,6 +1498,108 @@
         "tags" : [ "Rechnungen" ]
       }
     },
+    "/api/reporting/altersstruktur" : {
+      "get" : {
+        "operationId" : "altersstrukturLesen",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AltersstrukturDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Offene Posten nach Tagen über Fälligkeit: nicht fällig, 1–30, 31–60, 61–90, über 90",
+        "tags" : [ "Reporting" ]
+      }
+    },
+    "/api/reporting/uebersicht" : {
+      "get" : {
+        "operationId" : "uebersichtLesen",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UebersichtDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Kennzahlen für das Dashboard",
+        "tags" : [ "Reporting" ]
+      }
+    },
+    "/api/reporting/zahlungseingaenge" : {
+      "get" : {
+        "operationId" : "zahlungseingaengeLesen",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "monate",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 12,
+            "maximum" : 36,
+            "minimum" : 1
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/MonatseingangDto"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Fehler als ProblemDetail (RFC 9457) mit fachlichem Code"
+          }
+        },
+        "summary" : "Zahlungseingänge je Monat und Währung bis heute, ohne Lücken",
+        "tags" : [ "Reporting" ]
+      }
+    },
     "/api/zahlungen" : {
       "get" : {
         "operationId" : "zahlungenSuchen",
@@ -1218,6 +2048,113 @@
   },
   "components" : {
     "schemas" : {
+      "AblehnungDto" : {
+        "type" : "object",
+        "properties" : {
+          "grund" : {
+            "type" : "string"
+          },
+          "mahnungId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "rechnungsnummer" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "grund", "mahnungId" ]
+      },
+      "AenderungDto" : {
+        "type" : "object",
+        "properties" : {
+          "feld" : {
+            "type" : "string"
+          },
+          "nachher" : {
+            "type" : "string"
+          },
+          "vorher" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "feld" ]
+      },
+      "AltersbandDto" : {
+        "type" : "object",
+        "properties" : {
+          "anzahl" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "band" : {
+            "type" : "string",
+            "enum" : [ "NICHT_FAELLIG", "TAGE_1_30", "TAGE_31_60", "TAGE_61_90", "UEBER_90" ]
+          },
+          "betrag" : {
+            "type" : "number"
+          }
+        },
+        "required" : [ "anzahl", "band", "betrag" ]
+      },
+      "AltersstrukturDto" : {
+        "type" : "object",
+        "properties" : {
+          "stichtag" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "waehrungen" : {
+            "type" : "array",
+            "description" : "Je Währung alle fünf Bänder; Franken immer zuerst",
+            "items" : {
+              "$ref" : "#/components/schemas/WaehrungsstrukturDto"
+            }
+          }
+        },
+        "required" : [ "stichtag", "waehrungen" ]
+      },
+      "AuditEintragDto" : {
+        "type" : "object",
+        "properties" : {
+          "aenderungen" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AenderungDto"
+            }
+          },
+          "aktion" : {
+            "type" : "string",
+            "enum" : [ "ANGELEGT", "GEAENDERT", "GELOESCHT" ]
+          },
+          "benutzer" : {
+            "type" : "string"
+          },
+          "bezeichnung" : {
+            "type" : "string"
+          },
+          "objektId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "objektart" : {
+            "type" : "string",
+            "enum" : [ "RECHNUNG", "ZUORDNUNG", "MAHNUNG", "MAHNSTUFE", "KUNDE", "MANDANT", "MWST_SATZ" ]
+          },
+          "rechnungId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "revision" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "zeitpunkt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "required" : [ "aenderungen", "aktion", "benutzer", "bezeichnung", "objektId", "objektart", "revision", "zeitpunkt" ]
+      },
       "BenutzerDto" : {
         "type" : "object",
         "properties" : {
@@ -1348,6 +2285,64 @@
           }
         },
         "required" : [ "beschreibung", "einzelpreis", "menge", "mwstCode" ]
+      },
+      "FreigabeAnfrageDto" : {
+        "type" : "object",
+        "properties" : {
+          "mahnungen" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MahnungAuswahlDto"
+            },
+            "maxItems" : 500,
+            "minItems" : 0
+          }
+        },
+        "required" : [ "mahnungen" ]
+      },
+      "FreigabeErgebnisDto" : {
+        "type" : "object",
+        "properties" : {
+          "freigegeben" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "nichtFreigegeben" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AblehnungDto"
+            }
+          }
+        },
+        "required" : [ "freigegeben", "nichtFreigegeben" ]
+      },
+      "ImportDto" : {
+        "type" : "object",
+        "properties" : {
+          "dateiname" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "importiertAm" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "importiertVon" : {
+            "type" : "string"
+          },
+          "inKlaerung" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "neu" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "dateiname", "id", "importiertAm", "importiertVon", "inKlaerung", "neu" ]
       },
       "KundeAenderungDto" : {
         "type" : "object",
@@ -1496,6 +2491,397 @@
         },
         "required" : [ "land", "name", "ort", "plz", "zahlungsfristTage" ]
       },
+      "MahnlaufDto" : {
+        "type" : "object",
+        "properties" : {
+          "ausgefuehrtAm" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "ausgeloestVon" : {
+            "type" : "string"
+          },
+          "geprueft" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Überfällige Rechnungen, die der Lauf geprüft hat"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "stichtag" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "verworfen" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Alte Vorschläge zu Rechnungen, die nicht mehr offen sind"
+          },
+          "vorschlaege" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "ausgefuehrtAm", "ausgeloestVon", "geprueft", "id", "stichtag", "verworfen", "vorschlaege" ]
+      },
+      "MahnlaufInfoDto" : {
+        "type" : "object",
+        "properties" : {
+          "ausgefuehrtAm" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "ausgeloestVon" : {
+            "type" : "string"
+          },
+          "vorschlaege" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "ausgefuehrtAm", "ausgeloestVon", "vorschlaege" ]
+      },
+      "MahnstufeDto" : {
+        "type" : "object",
+        "properties" : {
+          "bezeichnung" : {
+            "type" : "string"
+          },
+          "fristTage" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "gebuehr" : {
+            "type" : "number"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "mindestabstandTage" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "stufe" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "tageNachFaelligkeit" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "textvorlage" : {
+            "type" : "string"
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "bezeichnung", "fristTage", "gebuehr", "id", "mindestabstandTage", "stufe", "tageNachFaelligkeit", "textvorlage", "version" ]
+      },
+      "MahnstufeEingabeDto" : {
+        "type" : "object",
+        "properties" : {
+          "bezeichnung" : {
+            "type" : "string",
+            "maxLength" : 40,
+            "minLength" : 0
+          },
+          "fristTage" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 90,
+            "minimum" : 1
+          },
+          "gebuehr" : {
+            "type" : "number",
+            "maximum" : 1000.00,
+            "minimum" : 0.00
+          },
+          "mindestabstandTage" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Abstand zur vorherigen Stufe; bei Stufe 1 ohne Wirkung",
+            "maximum" : 365,
+            "minimum" : 0
+          },
+          "tageNachFaelligkeit" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 365,
+            "minimum" : 1
+          },
+          "textvorlage" : {
+            "type" : "string",
+            "description" : "Brieftext; Platzhalter {rechnungsnummer}, {faelligAm}, {offen}, {frist} und {gebuehr}",
+            "maxLength" : 2000,
+            "minLength" : 0
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Version der bisherigen Stufe an dieser Position; leer für eine neue Stufe"
+          }
+        },
+        "required" : [ "bezeichnung", "fristTage", "gebuehr", "mindestabstandTage", "tageNachFaelligkeit", "textvorlage" ]
+      },
+      "MahnstufenAnfrageDto" : {
+        "type" : "object",
+        "properties" : {
+          "stufen" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MahnstufeEingabeDto"
+            },
+            "maxItems" : 5,
+            "minItems" : 0
+          }
+        },
+        "required" : [ "stufen" ]
+      },
+      "MahnungAuswahlDto" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "id", "version" ]
+      },
+      "MahnungDto" : {
+        "type" : "object",
+        "properties" : {
+          "aktuellOffen" : {
+            "type" : "number",
+            "description" : "Heute auf der Rechnung offen, ohne die Gebühr eines Vorschlags"
+          },
+          "bezeichnung" : {
+            "type" : "string"
+          },
+          "empfaengerEmail" : {
+            "type" : "string"
+          },
+          "faelligAm" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "freigegebenAm" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "freigegebenVon" : {
+            "type" : "string"
+          },
+          "fristBis" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "gebuehr" : {
+            "type" : "number"
+          },
+          "gesperrtBis" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "kundeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "kundeName" : {
+            "type" : "string"
+          },
+          "mahndatum" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "rechnungId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "rechnungsnummer" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "VORSCHLAG", "FREIGEGEBEN", "VERSENDET", "VERWORFEN" ]
+          },
+          "stufe" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "tageUeberfaellig" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Tage seit der Fälligkeit, gerechnet bis heute"
+          },
+          "versandfehler" : {
+            "type" : "string",
+            "description" : "Meldung des Mailservers, wenn der Versand gescheitert ist"
+          },
+          "versandweg" : {
+            "type" : "string",
+            "enum" : [ "EMAIL", "POST" ]
+          },
+          "versendetAm" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "verworfenAm" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "verworfenGrund" : {
+            "type" : "string"
+          },
+          "verworfenVon" : {
+            "type" : "string"
+          },
+          "waehrung" : {
+            "type" : "string",
+            "description" : "ISO-Code, etwa CHF"
+          },
+          "zuZahlen" : {
+            "type" : "number",
+            "description" : "Betrag im Schreiben: bei Vorschlägen der heute offene Betrag plus Gebühr, danach der Stand der Freigabe"
+          }
+        },
+        "required" : [ "aktuellOffen", "bezeichnung", "faelligAm", "fristBis", "gebuehr", "id", "kundeId", "kundeName", "mahndatum", "rechnungId", "rechnungsnummer", "status", "stufe", "tageUeberfaellig", "version", "waehrung", "zuZahlen" ]
+      },
+      "MandantAenderungDto" : {
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "type" : "string",
+            "format" : "email",
+            "maxLength" : 254,
+            "minLength" : 0
+          },
+          "hausnummer" : {
+            "type" : "string",
+            "maxLength" : 16,
+            "minLength" : 0
+          },
+          "iban" : {
+            "type" : "string",
+            "description" : "IBAN ohne QR-IBAN; Leerzeichen sind erlaubt",
+            "maxLength" : 34,
+            "minLength" : 0
+          },
+          "land" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "[A-Z]{2}"
+          },
+          "mwstNummer" : {
+            "type" : "string",
+            "description" : "Format CHE-123.456.789 MWST",
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "name" : {
+            "type" : "string",
+            "maxLength" : 70,
+            "minLength" : 0
+          },
+          "ort" : {
+            "type" : "string",
+            "maxLength" : 35,
+            "minLength" : 0
+          },
+          "plz" : {
+            "type" : "string",
+            "maxLength" : 16,
+            "minLength" : 0
+          },
+          "qrIban" : {
+            "type" : "string",
+            "description" : "Optional; damit erhalten neue Rechnungen eine QR-Referenz",
+            "maxLength" : 34,
+            "minLength" : 0
+          },
+          "rundungFuenfRappen" : {
+            "type" : "boolean"
+          },
+          "strasse" : {
+            "type" : "string",
+            "maxLength" : 70,
+            "minLength" : 0
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "iban", "land", "name", "ort", "plz", "rundungFuenfRappen", "version" ]
+      },
+      "MandantDetailDto" : {
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "type" : "string"
+          },
+          "hausnummer" : {
+            "type" : "string"
+          },
+          "iban" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "land" : {
+            "type" : "string"
+          },
+          "mwstNummer" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "ort" : {
+            "type" : "string"
+          },
+          "plz" : {
+            "type" : "string"
+          },
+          "qrIban" : {
+            "type" : "string"
+          },
+          "referenzart" : {
+            "type" : "string",
+            "description" : "QR mit QR-IBAN, sonst SCOR",
+            "enum" : [ "QR", "SCOR" ]
+          },
+          "rundungFuenfRappen" : {
+            "type" : "boolean"
+          },
+          "strasse" : {
+            "type" : "string"
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "iban", "id", "land", "name", "ort", "plz", "referenzart", "rundungFuenfRappen", "version" ]
+      },
       "MandantDto" : {
         "type" : "object",
         "properties" : {
@@ -1515,6 +2901,31 @@
           }
         },
         "required" : [ "id", "name", "ort", "referenzart" ]
+      },
+      "MonatseingangDto" : {
+        "type" : "object",
+        "properties" : {
+          "anzahl" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "automatisch" : {
+            "type" : "number",
+            "description" : "Davon automatisch über die Referenz zugeordnet"
+          },
+          "betrag" : {
+            "type" : "number"
+          },
+          "monat" : {
+            "type" : "string",
+            "description" : "Monat als yyyy-MM",
+            "example" : "2026-09"
+          },
+          "waehrung" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "anzahl", "automatisch", "betrag", "monat", "waehrung" ]
       },
       "MwstAnteilDto" : {
         "type" : "object",
@@ -1562,6 +2973,26 @@
           }
         },
         "required" : [ "bezeichnung", "code", "gueltigAb", "id", "satz" ]
+      },
+      "NeuerMwstSatzDto" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "enum" : [ "NORMAL", "REDUZIERT", "BEHERBERGUNG", "OHNE" ]
+          },
+          "gueltigAb" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Ab diesem Tag gilt der Satz; der bisherige endet am Vortag"
+          },
+          "satz" : {
+            "type" : "number",
+            "maximum" : 99.99,
+            "minimum" : 0.00
+          }
+        },
+        "required" : [ "code", "gueltigAb", "satz" ]
       },
       "PositionDto" : {
         "type" : "object",
@@ -1664,9 +3095,13 @@
             "type" : "string",
             "format" : "uuid"
           },
+          "mahngebuehren" : {
+            "type" : "number",
+            "description" : "Gebühren aus freigegebenen Mahnungen; sie gehören zur Forderung"
+          },
           "offen" : {
             "type" : "number",
-            "description" : "Total abzüglich Zahlungseingänge; 0 bei Entwürfen, bezahlten und stornierten Rechnungen"
+            "description" : "Total plus Mahngebühren abzüglich Zahlungseingänge; 0 bei Entwürfen, bezahlten und stornierten Rechnungen"
           },
           "positionen" : {
             "type" : "array",
@@ -1718,7 +3153,7 @@
             "format" : "int32"
           }
         },
-        "required" : [ "empfaenger", "faelligAm", "id", "kundeId", "offen", "positionen", "rechnungsdatum", "status", "summen", "ueberfaellig", "version", "waehrung", "zahlungsfristTage" ]
+        "required" : [ "empfaenger", "faelligAm", "id", "kundeId", "mahngebuehren", "offen", "positionen", "rechnungsdatum", "status", "summen", "ueberfaellig", "version", "waehrung", "zahlungsfristTage" ]
       },
       "RechnungZeileDto" : {
         "type" : "object",
@@ -1769,6 +3204,34 @@
         },
         "required" : [ "faelligAm", "id", "kundeId", "kundeName", "offen", "rechnungsdatum", "status", "total", "ueberfaellig", "version", "waehrung" ]
       },
+      "SeiteAuditEintragDto" : {
+        "type" : "object",
+        "properties" : {
+          "anzahlElemente" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "anzahlSeiten" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "groesse" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "inhalt" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AuditEintragDto"
+            }
+          },
+          "seite" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "anzahlElemente", "anzahlSeiten", "groesse", "inhalt", "seite" ]
+      },
       "SeiteKundeDto" : {
         "type" : "object",
         "properties" : {
@@ -1788,6 +3251,34 @@
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/KundeDto"
+            }
+          },
+          "seite" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "anzahlElemente", "anzahlSeiten", "groesse", "inhalt", "seite" ]
+      },
+      "SeiteMahnungDto" : {
+        "type" : "object",
+        "properties" : {
+          "anzahlElemente" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "anzahlSeiten" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "groesse" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "inhalt" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MahnungDto"
             }
           },
           "seite" : {
@@ -1896,6 +3387,23 @@
         },
         "required" : [ "grund", "version" ]
       },
+      "SummeDto" : {
+        "type" : "object",
+        "properties" : {
+          "anzahl" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "betrag" : {
+            "type" : "number"
+          },
+          "waehrung" : {
+            "type" : "string",
+            "description" : "ISO-Code, etwa CHF"
+          }
+        },
+        "required" : [ "anzahl", "betrag", "waehrung" ]
+      },
       "SummenDto" : {
         "type" : "object",
         "properties" : {
@@ -1920,9 +3428,85 @@
         },
         "required" : [ "mwst", "mwstTotal", "netto", "rundung", "total" ]
       },
+      "UebersichtDto" : {
+        "type" : "object",
+        "properties" : {
+          "automatisch30Tage" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Davon ohne Zutun über die Referenz zugeordnet"
+          },
+          "entwuerfe" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "inKlaerung" : {
+            "type" : "array",
+            "description" : "Rest der Zahlungen in der Klärungsliste",
+            "items" : {
+              "$ref" : "#/components/schemas/SummeDto"
+            }
+          },
+          "letzteImporte" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ImportDto"
+            }
+          },
+          "letzterMahnlauf" : {
+            "$ref" : "#/components/schemas/MahnlaufInfoDto"
+          },
+          "mahnvorschlaege" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "offen" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SummeDto"
+            }
+          },
+          "stichtag" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "ueberfaellig" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SummeDto"
+            }
+          },
+          "zahlungen30Tage" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Zahlungen der letzten 30 Tage nach Valuta"
+          }
+        },
+        "required" : [ "automatisch30Tage", "entwuerfe", "inKlaerung", "letzteImporte", "mahnvorschlaege", "offen", "stichtag", "ueberfaellig", "zahlungen30Tage" ]
+      },
       "VersionDto" : {
         "type" : "object",
         "properties" : {
+          "version" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "version" ]
+      },
+      "VerwerfenDto" : {
+        "type" : "object",
+        "properties" : {
+          "gesperrtBis" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Bis zu diesem Tag schlägt der Mahnlauf die Rechnung nicht mehr vor"
+          },
+          "grund" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
           "version" : {
             "type" : "integer",
             "format" : "int64"
@@ -2018,6 +3602,24 @@
           }
         },
         "required" : [ "automatisch", "begruendung", "betrag", "faelligAm", "kundeName", "offen", "rechnungId", "rechnungsnummer", "regel", "waehrung" ]
+      },
+      "WaehrungsstrukturDto" : {
+        "type" : "object",
+        "properties" : {
+          "baender" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AltersbandDto"
+            }
+          },
+          "total" : {
+            "type" : "number"
+          },
+          "waehrung" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "baender", "total", "waehrung" ]
       },
       "ZahlungDto" : {
         "type" : "object",

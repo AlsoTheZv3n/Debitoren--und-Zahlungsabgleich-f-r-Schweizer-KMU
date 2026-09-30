@@ -64,7 +64,7 @@ public class RechnungAbfragen {
         return rechnungen.finde(id).orElseThrow(() -> nichtGefunden(id));
     }
 
-    /** Total abzüglich Zahlungseingänge; 0, wenn die Rechnung nichts mehr erwartet oder noch Entwurf ist. */
+    /** Total plus Mahngebühren abzüglich Zahlungseingänge; 0, wenn die Rechnung nichts mehr erwartet oder Entwurf ist. */
     @PreAuthorize("hasRole('LESER')")
     public BigDecimal offenerBetrag(UUID id) {
         MandantKontext.erforderlich();

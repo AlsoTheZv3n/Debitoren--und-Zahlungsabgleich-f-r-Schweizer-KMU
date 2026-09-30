@@ -33,6 +33,8 @@
         <pdfbox.version>3.0.8</pdfbox.version>
         <datafaker.version>2.7.0</datafaker.version>
         <jaxb-maven-plugin.version>4.0.16</jaxb-maven-plugin.version>
+        <shedlock.version>7.10.1</shedlock.version>
+        <greenmail.version>2.1.14</greenmail.version>
         <!-- Grenze für domain und application, siehe jacoco-maven-plugin -->
         <jacoco.mindestabdeckung>0.80</jacoco.mindestabdeckung>
         <!-- Wird von JaCoCo gesetzt; leer, falls JaCoCo übersprungen wird -->
@@ -92,6 +94,12 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Audit-Log: Hibernate Envers schreibt jede Änderung in die *_aud-Tabellen -->
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-envers</artifactId>
+        </dependency>
+
         <!-- Security -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -106,6 +114,24 @@
         <dependency>
             <groupId>org.springframework.modulith</groupId>
             <artifactId>spring-modulith-starter-jdbc</artifactId>
+        </dependency>
+
+        <!-- Geplante Jobs: der tägliche Mahnlauf läuft bei mehreren Instanzen nur einmal -->
+        <dependency>
+            <groupId>net.javacrumbs.shedlock</groupId>
+            <artifactId>shedlock-spring</artifactId>
+            <version>${shedlock.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.javacrumbs.shedlock</groupId>
+            <artifactId>shedlock-provider-jdbc-template</artifactId>
+            <version>${shedlock.version}</version>
+        </dependency>
+
+        <!-- Versand der Mahnungen per E-Mail -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
 
         <!-- QR-Rechnung und PDF -->
@@ -234,6 +260,12 @@
         <dependency>
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.icegreen</groupId>
+            <artifactId>greenmail</artifactId>
+            <version>${greenmail.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

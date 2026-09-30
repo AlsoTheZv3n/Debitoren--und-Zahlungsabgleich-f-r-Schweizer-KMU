@@ -21,4 +21,6 @@ public interface ZahlungRepository {
 
     /** Welche der Bankreferenzen schon zu einer Zahlung gehören. */
     Set<String> bekannteBankreferenzen(Collection<String> bankReferenzen);
+
+    long anzahlMitStatus(Zahlungsstatus status);
 }

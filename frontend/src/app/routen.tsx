@@ -20,6 +20,7 @@ const kundeDrawer = () => import('@/features/kunden/KundeDrawer')
 const kundeNeu = () => import('@/features/kunden/KundeNeuDrawer')
 const rechnungsliste = () => import('@/features/rechnungen/RechnungenSeite')
 const rechnungSeiten = () => import('@/features/rechnungen/RechnungSeiten')
+const einstellungen = () => import('./einstellungen-seiten')
 
 export const routen: RouteObject[] = [
   {
@@ -101,6 +102,29 @@ export const routen: RouteObject[] = [
               </RollenSchranke>
             ),
             handle: titel('Einstellungen'),
+            children: [
+              { index: true, element: <Navigate to="mandant" replace /> },
+              {
+                path: 'mandant',
+                lazy: async () => ({ Component: (await einstellungen()).MandantEinstellungen }),
+                handle: titel('Mandant'),
+              },
+              {
+                path: 'mahnstufen',
+                lazy: async () => ({ Component: (await einstellungen()).MahnstufenEinstellungen }),
+                handle: titel('Mahnstufen'),
+              },
+              {
+                path: 'mwst',
+                lazy: async () => ({ Component: (await einstellungen()).MwstEinstellungen }),
+                handle: titel('MWST-Sätze'),
+              },
+              {
+                path: 'audit',
+                lazy: async () => ({ Component: (await einstellungen()).AuditLogEinstellungen }),
+                handle: titel('Audit-Log'),
+              },
+            ],
           },
           { path: '*', element: <NichtGefundenSeite />, handle: titel('Nicht gefunden') },
         ],

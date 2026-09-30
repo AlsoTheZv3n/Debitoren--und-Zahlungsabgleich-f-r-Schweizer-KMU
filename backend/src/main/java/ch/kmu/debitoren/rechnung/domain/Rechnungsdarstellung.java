@@ -15,6 +15,9 @@ public interface Rechnungsdarstellung {
 
     byte[] pdf(Rechnungsdokument dokument);
 
+    /** Mahnschreiben mit QR-Zahlteil über den offenen Betrag. */
+    byte[] mahnungPdf(Mahndokument dokument);
+
     String zahlteilSvg(Zahlteil zahlteil);
 
     /** Verstösse gegen die Swiss Payment Standards; leer, wenn der Zahlteil gültig ist. */
@@ -46,4 +49,13 @@ public interface Rechnungsdarstellung {
             int zahlungsfristTage) {}
 
     record Rechnungsdokument(Rechnungssteller steller, Rechnung rechnung, String kundennummer, Zahlteil zahlteil) {}
+
+    /** @param empfaenger aktuelle Adresse des Kunden */
+    record Mahndokument(
+            Rechnungssteller steller,
+            Rechnung rechnung,
+            String kundennummer,
+            Empfaenger empfaenger,
+            Mahnangaben angaben,
+            Zahlteil zahlteil) {}
 }

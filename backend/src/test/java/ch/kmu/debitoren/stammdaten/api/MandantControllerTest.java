@@ -8,6 +8,7 @@ import ch.kmu.debitoren.shared.domain.Adresse;
 import ch.kmu.debitoren.shared.domain.Iban;
 import ch.kmu.debitoren.shared.security.KeycloakRollenConverter;
 import ch.kmu.debitoren.shared.security.SecurityKonfiguration;
+import ch.kmu.debitoren.stammdaten.application.MandantVerwaltung;
 import ch.kmu.debitoren.stammdaten.application.MandantenAbfragen;
 import ch.kmu.debitoren.stammdaten.domain.Mandant;
 import java.util.List;
@@ -30,6 +31,9 @@ class MandantControllerTest {
 
     @MockitoBean
     MandantenAbfragen abfragen;
+
+    @MockitoBean
+    MandantVerwaltung verwaltung;
 
     @MockitoBean
     JwtDecoder jwtDecoder;

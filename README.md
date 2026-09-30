@@ -2,7 +2,7 @@
 
 QR-Rechnungen erstellen, Zahlungseingänge aus camt.054 automatisch zuordnen und ein mehrstufiges Mahnwesen führen, mandantenfähig von Beginn an. Ziele, Architektur und Roadmap stehen in der [Projektplanung](debitoren-zahlungsabgleich-projektplanung.md).
 
-**Stand:** Phase 3 (Zahlungsimport und Abgleich). Mahnwesen und Reporting sind als Module angelegt und folgen in Phase 4.
+**Stand:** Phase 4 (Mahnwesen und Übersicht). Staging und Produktion auf Kubernetes folgen in Phase 5.
 
 ## Aufbau
 
@@ -28,9 +28,9 @@ deploy/compose/      PostgreSQL 18, Keycloak, Mailpit; mit Profil "app" auch Bac
 # 1. PostgreSQL, Keycloak und Mailpit
 docker compose -f deploy/compose/docker-compose.yml up -d --wait
 
-# 2. Backend im Profil dev (Flyway; der Seeder legt zwei Demo-Mandanten mit je 200 Kunden und 1'500 Rechnungen an
-#    und spielt Zahlungen als camt.054-Dateien durch den echten Import: etwa 60 % bezahlt, 10 % teilbezahlt,
-#    dazu je ein Beispiel für die Klärungsliste)
+# 2. Backend im Profil dev (Flyway; der Seeder legt zwei Demo-Mandanten mit je 200 Kunden und 1'500 Rechnungen an,
+#    spielt Zahlungen als camt.054-Dateien durch den echten Import und mahnt die überfälligen Rechnungen an zwei
+#    früheren Stichtagen; die Mahnungen landen in Mailpit, die Vorschläge von heute warten auf Freigabe)
 cd backend && ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 
 # 3. Frontend
@@ -87,6 +87,7 @@ cd e2e && pnpm install && pnpm exec playwright install chromium && pnpm test
 - **API-Vertrag:** `frontend/openapi.json` und `frontend/src/shared/api/generiert` entstehen nur über `pnpm api:sync`, nie von Hand. Die CI bricht ab, wenn sie veraltet sind oder die Änderung die API bricht.
 - **Mandanten:** Jede fachliche Tabelle trägt `mandant_id`; Hibernate filtert über `@TenantId`. Der Mandant kommt aus dem Claim `mandant_id` im Token, bei mehreren wählt der Header `X-Mandant-Id`.
 - **Rollen:** Das Backend prüft jede Aktion per `@PreAuthorize` auf den Use Cases; die Oberfläche blendet nur aus.
+- **Audit-Log:** Hibernate Envers schreibt jede Änderung an Rechnungen, Zuordnungen, Mahnungen, Mahnstufen, Kunden, Mandant und MWST-Sätzen mit Benutzer und Mandant in die `_aud`-Tabellen. Eine neue auditierte Entität braucht ihre `_aud`-Tabelle in einer Migration.
 - **Migrationen:** `V001__stammdaten.sql` usw.; eine ausgeführte Migration wird nie geändert. Testdaten kommen aus dem Seeder im Profil `dev`, nicht aus Migrationen.
 - **Commits:** Conventional Commits (`feat:`, `fix:`, `chore:` …); release-please erzeugt daraus Version und Changelog.
 
@@ -106,6 +107,21 @@ cd e2e && pnpm install && pnpm exec playwright install chromium && pnpm test
 - **Klärungsliste:** alles, was sich nicht automatisch zuordnen liess, mit Grund (ohne Referenz, Referenz unbekannt, Überzahlung, andere Währung, stornierte oder bereits bezahlte Rechnung). Links die Zahlungen, rechts Vorschläge und eine Suche nach offenen Rechnungen; zugeordnet wird mit einem Klick, auf Wunsch mit Teilbetrag. Eine Zuordnung lässt sich in der Rechnung unter «Zahlungseingänge» wieder aufheben.
 - **Gleichzeitigkeit:** Eine Zuordnung ändert Zahlung, Zuordnung und Rechnung in einer Transaktion und erhöht die Versionen von Zahlung und Rechnung; wer eine veraltete Zahlung zuordnet, erhält 409.
 - **Demo-Datei:** Im Profil `dev` erzeugt `POST /api/dev/camt-testdatei` eine camt.054-Datei aus den offenen Rechnungen des gewählten Mandanten, mit jedem Fall des Abgleichs. Am einfachsten über die Swagger-Oberfläche unter <http://localhost:8082/swagger-ui.html>: unter «Authorize» das Token eintragen (im Browser nach der Anmeldung unter Session Storage, Eintrag `oidc.user:…`, Feld `access_token`), bei Benutzern mit mehreren Mandanten dazu die Mandanten-ID; die heruntergeladene Datei dann im Import hochladen.
+
+## Mahnwesen
+
+- **Mahnstufen** je Mandant, in den Einstellungen änderbar (bis fünf): Tage nach Fälligkeit, Mindestabstand zur vorherigen Stufe, Zahlungsfrist, Gebühr und Brieftext mit den Platzhaltern `{rechnungsnummer}`, `{faelligAm}`, `{offen}`, `{frist}` und `{gebuehr}`. Jeder neue Mandant erhält die Stufen der Projektplanung: Zahlungserinnerung nach 10 Tagen, 1. Mahnung nach 30 Tagen, 2. Mahnung nach 45 Tagen mit CHF 20.00 Gebühr.
+- **Mahnlauf:** täglich um 6 Uhr (`DEBITOREN_MAHNLAUF_ZEITPLAN`, Cron; `-` schaltet ihn ab), mit ShedLock bei mehreren Instanzen nur einmal; Admins starten ihn auch von Hand. Gemahnt wird Stufe um Stufe, nie übersprungen. Vorschläge zu inzwischen bezahlten oder stornierten Rechnungen verwirft der Lauf selbst.
+- **Freigabe:** gesammelt, jede Mahnung in eigener Transaktion. Erst jetzt belastet die Gebühr die Rechnung; der offene Posten ist ab dann Total plus Gebühren minus Zahlungen, bezahlt ist die Rechnung erst mit den Gebühren. Das Schreiben hält Beträge und Text der Freigabe fest.
+- **Versand:** nach dem Commit als PDF mit QR-Zahlteil (offener Betrag, Referenz der Rechnung) per E-Mail. Absender ist `DEBITOREN_MAIL_ABSENDER` mit dem Namen des Mandanten, Antworten gehen an dessen E-Mail-Adresse. Ohne E-Mail-Adresse des Kunden liegt das Schreiben unter «Zum Versand» zum Drucken; nach dem Versand per Post bestätigt die Buchhaltung ihn dort. Scheitert der Mailserver, bleibt die Mahnung mit dem Fehler stehen und lässt sich erneut senden.
+- **Verwerfen:** mit Grund und auf Wunsch einer Sperre bis zu einem Datum; bis dahin schlägt der Mahnlauf die Rechnung nicht vor.
+- **Mail lokal:** Mailpit aus Compose (<http://localhost:8025>); Umgebungsvariablen `MAIL_HOST` und `MAIL_PORT`, produktiv zusätzlich `MAIL_USERNAME` und `MAIL_PASSWORD` mit STARTTLS.
+
+## Übersicht, Audit-Log und Einstellungen
+
+- **Dashboard:** offene und überfällige Posten, Klärungsliste, Mahnvorschläge und der Anteil automatisch zugeordneter Zahlungen der letzten 30 Tage; dazu die Altersstruktur (nicht fällig, 1–30, 31–60, 61–90, über 90 Tage) und die Zahlungseingänge der letzten zwölf Monate. Beide Diagramme haben eine Tabelle mit denselben Werten.
+- **Verlauf:** Jede Rechnung zeigt ihre Mahnungen und den Verlauf aus dem Audit-Log, samt Zahlungseingängen. Das ganze Log mit Filter nach Objekt und Benutzer steht unter Einstellungen (nur Admin).
+- **Einstellungen** (nur Admin): Mandant mit Adresse, IBAN und QR-IBAN (neue Rechnungen folgen dem Konto, freigegebene bleiben), Mahnstufen und neue MWST-Sätze ab Stichtag; der bisherige Satz desselben Codes endet am Vortag.
 
 ## Gate 1
 
@@ -137,3 +153,11 @@ cd backend && ./mvnw verify -Dtest=NONE -Dsurefire.failIfNoSpecifiedTests=false 
 ```
 
 Ein neues Szenario ist eine neue JSON-Datei mit passender XML-Datei; der Test findet es selbst.
+
+## Gate 4
+
+| Kriterium | Nachweis |
+| --- | --- |
+| E2E-Hauptfluss in Playwright grün | `e2e/tests/mahnwesen.spec.ts`: überfällige Rechnung, Mahnlauf, Freigabe, Versand per E-Mail bis Mailpit samt PDF-Anhang, Mahnung und Verlauf in der Rechnung; dazu WCAG 2.2 AA für Dashboard, Mahnwesen und Einstellungen und die Rollen |
+
+Im Backend prüfen `MahnwesenIT`, `ReportingIT`, `EinstellungenIT` und `AuditErfassungIT` dieselben Abläufe gegen PostgreSQL, der Versand gegen einen SMTP-Server im Test (GreenMail). `./mvnw verify` legt zusätzlich ein Mahnschreiben unter `backend/target/qr-zahlteil-beispiele/mahnung-qr-referenz-chf.pdf` ab; es lässt sich wie die Rechnungen im SIX-Portal prüfen.

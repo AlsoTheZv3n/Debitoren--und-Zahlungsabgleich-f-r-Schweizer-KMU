@@ -6,9 +6,11 @@ import static ch.kmu.debitoren.rechnung.domain.RechnungTestBuilder.rechnung;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import ch.kmu.debitoren.rechnung.domain.Mahnangaben;
 import ch.kmu.debitoren.rechnung.domain.QrReferenz;
 import ch.kmu.debitoren.rechnung.domain.Rechnung;
 import ch.kmu.debitoren.rechnung.domain.RechnungFehlercode;
+import ch.kmu.debitoren.rechnung.domain.Rechnungsdarstellung.Mahndokument;
 import ch.kmu.debitoren.rechnung.domain.Rechnungsdarstellung.Rechnungsangaben;
 import ch.kmu.debitoren.rechnung.domain.Rechnungsdarstellung.Rechnungsdokument;
 import ch.kmu.debitoren.rechnung.domain.Rechnungsdarstellung.Rechnungssteller;
@@ -139,6 +141,63 @@ class QrRechnungRendererTest {
         assertThat(QRBill.encodeQrCodeText(QrRechnungRenderer.bill(zahlteil(MIT_QR_IBAN, rechnung))))
                 .contains("EUR")
                 .contains("410.78");
+    }
+
+    @Test
+    void mahnschreibenMitGebuehrUndZahlteilUeberDenOffenenBetrag() throws IOException {
+        var rechnung = freigegeben("RE-2026-0412", QrReferenz.aus("2026000412"));
+        var angaben = new Mahnangaben(
+                "2. Mahnung",
+                LocalDate.of(2026, 10, 30),
+                LocalDate.of(2026, 11, 9),
+                "Leider ist die Rechnung noch offen.\n\nFür den Aufwand verrechnen wir eine Gebühr.",
+                rechnung.getTotal(),
+                Geld.chf("100.00"),
+                Geld.chf("20.00"),
+                Geld.chf("384.55"));
+        var zahlteil = new Zahlteil(
+                MIT_QR_IBAN,
+                Geld.CHF,
+                angaben.offen(),
+                rechnung.getEmpfaenger(),
+                rechnung.getReferenz(),
+                "2. Mahnung zu Rechnung RE-2026-0412",
+                null);
+        var pdf = renderer.mahnungPdf(
+                new Mahndokument(MIT_QR_IBAN, rechnung, "K-10001", rechnung.getEmpfaenger(), angaben, zahlteil));
+        Files.write(BEISPIELE.resolve("mahnung-qr-referenz-chf.pdf"), pdf);
+
+        try (var dokument = Loader.loadPDF(pdf)) {
+            assertThat(dokument.getNumberOfPages()).isEqualTo(1);
+            var text = new PDFTextStripper().getText(dokument);
+            assertThat(text)
+                    .contains("2. Mahnung")
+                    .contains("Bern, 30.10.2026")
+                    .contains("Rechnung RE-2026-0412")
+                    .contains("Fällig seit")
+                    .contains("Leider ist die Rechnung noch offen.")
+                    .contains("Für den Aufwand verrechnen wir eine Gebühr.")
+                    .contains("Rechnungsbetrag")
+                    .contains("464.55")
+                    .contains("Bereits bezahlt")
+                    .contains("-100.00")
+                    .contains("Mahngebühren")
+                    .contains("Offener Betrag CHF")
+                    .contains("384.55")
+                    .contains("bis am 09.11.2026")
+                    .contains("Zahlteil");
+        }
+        assertThat(QRBill.encodeQrCodeText(QrRechnungRenderer.bill(zahlteil)))
+                .contains("384.55")
+                .contains(rechnung.getReferenz().wert())
+                .contains("2. Mahnung zu Rechnung RE-2026-0412");
+    }
+
+    @Test
+    void absaetzeTrennenSichAnLeerzeilen() {
+        assertThat(MahnschreibenAnsicht.absaetze("Erster\nAbsatz.\n\n  Zweiter Absatz.  \n\n\n"))
+                .containsExactly("Erster Absatz.", "Zweiter Absatz.");
+        assertThat(MahnschreibenAnsicht.absaetze(" ")).isEmpty();
     }
 
     @Test

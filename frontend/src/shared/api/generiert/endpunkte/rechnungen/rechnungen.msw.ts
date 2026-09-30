@@ -75,6 +75,7 @@ export const getEntwurfAnlegenResponseMock = (
   ]),
   id: faker.string.uuid(),
   kundeId: faker.string.uuid(),
+  mahngebuehren: faker.number.float({ fractionDigits: 2 }),
   offen: faker.number.float({ fractionDigits: 2 }),
   positionen: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({
@@ -198,6 +199,7 @@ export const getRechnungLesenResponseMock = (
   ]),
   id: faker.string.uuid(),
   kundeId: faker.string.uuid(),
+  mahngebuehren: faker.number.float({ fractionDigits: 2 }),
   offen: faker.number.float({ fractionDigits: 2 }),
   positionen: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({
@@ -296,6 +298,7 @@ export const getEntwurfAendernResponseMock = (
   ]),
   id: faker.string.uuid(),
   kundeId: faker.string.uuid(),
+  mahngebuehren: faker.number.float({ fractionDigits: 2 }),
   offen: faker.number.float({ fractionDigits: 2 }),
   positionen: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({
@@ -394,6 +397,7 @@ export const getRechnungFreigebenResponseMock = (
   ]),
   id: faker.string.uuid(),
   kundeId: faker.string.uuid(),
+  mahngebuehren: faker.number.float({ fractionDigits: 2 }),
   offen: faker.number.float({ fractionDigits: 2 }),
   positionen: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({
@@ -495,6 +499,7 @@ export const getRechnungStornierenResponseMock = (
   ]),
   id: faker.string.uuid(),
   kundeId: faker.string.uuid(),
+  mahngebuehren: faker.number.float({ fractionDigits: 2 }),
   offen: faker.number.float({ fractionDigits: 2 }),
   positionen: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({

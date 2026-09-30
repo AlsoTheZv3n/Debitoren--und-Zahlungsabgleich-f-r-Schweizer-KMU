@@ -123,6 +123,7 @@ export function demoRechnung(ueberschreiben: Partial<RechnungDto> = {}): Rechnun
       },
     ],
     summen: DEMO_SUMMEN,
+    mahngebuehren: 0,
     offen: 1840,
     ...ueberschreiben,
   }

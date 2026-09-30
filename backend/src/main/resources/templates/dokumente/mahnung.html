@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de-CH">
+<head>
+    <meta charset="UTF-8" />
+    <title th:text="${m.titel()}">Mahnung</title>
+    <style>
+        /* Wie die Rechnung: unten 112 mm frei für den QR-Zahlteil, Empfänger im Sichtfenster rechts. */
+        @page {
+            size: A4;
+            margin: 18mm 18mm 112mm 22mm;
+        }
+
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 9.5pt;
+            line-height: 1.35;
+            color: #111;
+        }
+
+        table.kopf {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table.kopf td {
+            vertical-align: top;
+            padding: 0;
+        }
+
+        td.absender {
+            width: 96mm;
+            font-size: 8.5pt;
+            color: #444;
+        }
+
+        td.absender .name {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #111;
+        }
+
+        table.kopf td.empfaenger {
+            padding-top: 27mm;
+            font-size: 10pt;
+        }
+
+        /* Titel links, Ort und Datum rechts auf derselben Zeile. */
+        table.titel {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8mm 0 3mm 0;
+        }
+
+        table.titel td {
+            padding: 0;
+            vertical-align: bottom;
+        }
+
+        table.titel td.datum {
+            text-align: right;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 15pt;
+        }
+
+        table.angaben {
+            border-collapse: collapse;
+            margin-bottom: 4mm;
+        }
+
+        table.angaben td {
+            padding: 0.4mm 8mm 0.4mm 0;
+        }
+
+        table.angaben td.bezeichnung {
+            color: #555;
+        }
+
+        p.absatz {
+            margin: 0 0 2.5mm 0;
+        }
+
+        table.betraege {
+            margin-top: 3mm;
+            border-collapse: collapse;
+            width: 95mm;
+        }
+
+        table.betraege td {
+            padding: 0.5mm 1.5mm 0.5mm 0;
+        }
+
+        table.betraege td.betrag {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        table.betraege tr.total td {
+            font-weight: bold;
+            font-size: 10.5pt;
+            border-top: 0.6pt solid #111;
+            padding-top: 1.5mm;
+        }
+
+        p.hinweis {
+            margin: 4mm 0 0 0;
+        }
+
+        p.gruss {
+            margin: 4mm 0 0 0;
+        }
+    </style>
+</head>
+<body>
+    <table class="kopf">
+        <tr>
+            <td class="absender">
+                <div class="name" th:text="${m.absenderName()}">Mandant</div>
+                <div th:each="zeile : ${m.absenderZeilen()}" th:text="${zeile}">Strasse</div>
+            </td>
+            <td class="empfaenger">
+                <div th:each="zeile : ${m.empfaengerZeilen()}" th:text="${zeile}">Empfänger</div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="titel">
+        <tr>
+            <td><h1 th:text="${m.titel()}">1. Mahnung</h1></td>
+            <td class="datum" th:text="${m.ortUndDatum()}">Bern, 30.09.2026</td>
+        </tr>
+    </table>
+
+    <table class="angaben">
+        <tr th:each="angabe : ${m.angaben()}">
+            <td class="bezeichnung" th:text="${angabe.bezeichnung()}">Bezeichnung</td>
+            <td th:text="${angabe.wert()}">Wert</td>
+        </tr>
+    </table>
+
+    <p class="absatz" th:each="absatz : ${m.absaetze()}" th:text="${absatz}">Text</p>
+
+    <table class="betraege">
+        <tr th:each="betrag : ${m.betraege()}">
+            <td th:text="${betrag.bezeichnung()}">Rechnungsbetrag</td>
+            <td class="betrag" th:text="${betrag.wert()}">0.00</td>
+        </tr>
+        <tr class="total">
+            <td th:text="${m.totalBezeichnung()}">Offener Betrag CHF</td>
+            <td class="betrag" th:text="${m.total()}">0.00</td>
+        </tr>
+    </table>
+
+    <p class="hinweis" th:text="${m.zahlungshinweis()}">Zahlungshinweis</p>
+
+    <p class="gruss">
+        Freundliche Grüsse<br />
+        <span th:text="${m.absenderName()}">Mandant</span>
+    </p>
+</body>
+</html>

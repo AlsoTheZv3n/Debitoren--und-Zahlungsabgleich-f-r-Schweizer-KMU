@@ -15,5 +15,8 @@ public interface MandantRepository {
 
     boolean existiert(UUID id);
 
+    /** IDs aller Mandanten, nach Name sortiert. */
+    List<UUID> alleIds();
+
     Mandant speichern(Mandant mandant);
 }

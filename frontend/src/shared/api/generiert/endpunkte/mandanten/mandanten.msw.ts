@@ -10,7 +10,7 @@ import { faker } from '@faker-js/faker/locale/de_CH'
 import { HttpResponse, http } from 'msw'
 import type { RequestHandlerOptions } from 'msw'
 
-import type { MandantDto } from '../../modell'
+import type { MandantDetailDto, MandantDto } from '../../modell'
 
 export const getMandantenAuflistenResponseMock = (): MandantDto[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
@@ -19,6 +19,76 @@ export const getMandantenAuflistenResponseMock = (): MandantDto[] =>
     ort: faker.string.alpha({ length: { min: 10, max: 20 } }),
     referenzart: faker.helpers.arrayElement(['QR', 'SCOR'] as const),
   }))
+
+export const getMandantLesenResponseMock = (
+  overrideResponse: Partial<Extract<MandantDetailDto, object>> = {},
+): MandantDetailDto => ({
+  email: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  hausnummer: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  iban: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  id: faker.string.uuid(),
+  land: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  mwstNummer: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ort: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  plz: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  qrIban: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  referenzart: faker.helpers.arrayElement(['QR', 'SCOR'] as const),
+  rundungFuenfRappen: faker.datatype.boolean(),
+  strasse: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  version: faker.number.int(),
+  ...overrideResponse,
+})
+
+export const getMandantAendernResponseMock = (
+  overrideResponse: Partial<Extract<MandantDetailDto, object>> = {},
+): MandantDetailDto => ({
+  email: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  hausnummer: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  iban: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  id: faker.string.uuid(),
+  land: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  mwstNummer: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ort: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  plz: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  qrIban: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  referenzart: faker.helpers.arrayElement(['QR', 'SCOR'] as const),
+  rundungFuenfRappen: faker.datatype.boolean(),
+  strasse: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  version: faker.number.int(),
+  ...overrideResponse,
+})
 
 export const getMandantenAuflistenMockHandler = (
   overrideResponse?:
@@ -43,4 +113,56 @@ export const getMandantenAuflistenMockHandler = (
     options,
   )
 }
-export const getMandantenMock = () => [getMandantenAuflistenMockHandler()]
+
+export const getMandantLesenMockHandler = (
+  overrideResponse?:
+    | MandantDetailDto
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<MandantDetailDto> | MandantDetailDto),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    '*/api/mandanten/aktuell',
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === 'function'
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getMandantLesenResponseMock(),
+        { status: 200 },
+      )
+    },
+    options,
+  )
+}
+
+export const getMandantAendernMockHandler = (
+  overrideResponse?:
+    | MandantDetailDto
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<MandantDetailDto> | MandantDetailDto),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    '*/api/mandanten/aktuell',
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === 'function'
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getMandantAendernResponseMock(),
+        { status: 200 },
+      )
+    },
+    options,
+  )
+}
+export const getMandantenMock = () => [
+  getMandantenAuflistenMockHandler(),
+  getMandantLesenMockHandler(),
+  getMandantAendernMockHandler(),
+]

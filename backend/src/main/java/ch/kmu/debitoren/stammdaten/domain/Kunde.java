@@ -14,11 +14,14 @@ import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 import org.springframework.modulith.NamedInterface;
 
 /** Debitor eines Mandanten mit strukturierter Adresse und eigener Zahlungsfrist. */
 @NamedInterface("modell")
 @Entity
+@Audited
 @Table(name = "kunde")
 public class Kunde {
 
@@ -49,9 +52,11 @@ public class Kunde {
     private int zahlungsfristTage;
 
     @CreationTimestamp
+    @NotAudited
     private Instant erstelltAm;
 
     @UpdateTimestamp
+    @NotAudited
     private Instant geaendertAm;
 
     protected Kunde() {}

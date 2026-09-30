@@ -15,6 +15,7 @@ import java.util.Currency;
 import java.util.UUID;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.TenantId;
+import org.hibernate.envers.Audited;
 
 /**
  * Ordnet einen Teil einer Zahlung einer Rechnung zu. Eine Zuordnung ändert sich nie; wer sie aufhebt,
@@ -22,6 +23,7 @@ import org.hibernate.annotations.TenantId;
  */
 @Entity
 @Immutable
+@Audited
 @Table(name = "zuordnung")
 public class Zuordnung {
 

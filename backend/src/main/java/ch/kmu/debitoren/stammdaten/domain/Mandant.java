@@ -15,12 +15,15 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 
 /**
  * Firma, die Rechnungen stellt. Mit QR-IBAN nutzt sie die QR-Referenz, sonst die SCOR-Referenz. Die IBAN
  * selbst darf keine QR-IBAN sein.
  */
 @Entity
+@Audited
 @Table(name = "mandant")
 public class Mandant {
 
@@ -50,24 +53,35 @@ public class Mandant {
     private boolean rundungFuenfRappen = true;
 
     @CreationTimestamp
+    @NotAudited
     private Instant erstelltAm;
 
     @UpdateTimestamp
+    @NotAudited
     private Instant geaendertAm;
 
     protected Mandant() {}
 
     public Mandant(UUID id, String name, Adresse adresse, Iban iban, Iban qrIban) {
         this.id = Pruefe.vorhanden(id, "ID");
+        aendern(name, adresse, iban, qrIban);
+    }
+
+    /**
+     * Ändert Name, Adresse und Konten. Bestehende Rechnungen behalten ihre Referenz; neue erhalten mit QR-IBAN eine
+     * QR-Referenz, sonst eine SCOR-Referenz.
+     */
+    public void aendern(String name, Adresse adresse, Iban iban, Iban qrIban) {
         this.name = Pruefe.pflichttext(name, "Name", 70);
         this.adresse = Pruefe.vorhanden(adresse, "Adresse");
-        this.iban = Pruefe.vorhanden(iban, "IBAN");
+        Pruefe.vorhanden(iban, "IBAN");
         if (iban.istQrIban()) {
             throw Pruefe.ungueltig("Als IBAN ist eine QR-IBAN nicht erlaubt; sie gehört ins Feld QR-IBAN");
         }
         if (qrIban != null && !qrIban.istQrIban()) {
             throw Pruefe.ungueltig("Die QR-IBAN muss eine Institutsidentifikation von 30000 bis 31999 haben");
         }
+        this.iban = iban;
         this.qrIban = qrIban;
     }
 
@@ -93,6 +107,10 @@ public class Mandant {
 
     public UUID getId() {
         return id;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 
     public String getName() {

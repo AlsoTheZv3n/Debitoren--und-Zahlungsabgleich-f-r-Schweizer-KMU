@@ -21,6 +21,31 @@ describe('Rechnungsansicht', () => {
     vi.restoreAllMocks()
   })
 
+  it('zeigt Mahngebühren, Mahnungen und den Verlauf der Rechnung', async () => {
+    renderAnwendung({
+      pfad: `/rechnungen/${demoRechnung().id}`,
+      handler: [
+        http.get('*/api/rechnungen/:id', () =>
+          HttpResponse.json<RechnungDto>(demoRechnung({ mahngebuehren: 20, offen: 1860 })),
+        ),
+      ],
+    })
+
+    expect(await screen.findByText('Mahngebühren')).toBeInTheDocument()
+    expect(screen.getByText('Mahngebühren').nextElementSibling).toHaveTextContent('CHF 20.00')
+    const mahnungen = await screen.findByRole('region', { name: 'Mahnungen' })
+    expect(await within(mahnungen).findByText('Zahlungserinnerung')).toBeInTheDocument()
+    expect(within(mahnungen).getByText('Per E-Mail versendet')).toBeInTheDocument()
+    expect(
+      within(mahnungen).getByRole('button', { name: 'Zahlungserinnerung herunterladen' }),
+    ).toBeInTheDocument()
+
+    const verlauf = screen.getByRole('region', { name: 'Verlauf' })
+    expect(await within(verlauf).findByText('Zahlungseingang angelegt')).toBeInTheDocument()
+    expect(within(verlauf).getByText('Rechnung geändert')).toBeInTheDocument()
+    expect(within(verlauf).getByText('CHF 500.00')).toBeInTheDocument()
+  })
+
   it('zeigt Empfänger, Referenz, Positionen, Summen und den Zahlteil', async () => {
     renderAnwendung({ pfad: `/rechnungen/${demoRechnung().id}` })
 
